@@ -12,8 +12,8 @@ import java.util.Map;
 
 public class TaskManager {
 	private Integer sequenceId = 0;
-	public Map<TaskType, List<Task>> tasks = new HashMap<>();
-	public Map<Integer, TaskType> tasksTaskTypeInd = new HashMap<>();
+	private Map<TaskType, List<Task>> tasks = new HashMap<>();
+	private Map<Integer, TaskType> tasksTaskTypeInd = new HashMap<>();
 
 	public List<Task> createOrUpdate(ArrayList<? extends Task> tasksList) throws IllegalArgumentException {
 		ArrayList<Task> result = new ArrayList<>();
@@ -26,53 +26,29 @@ public class TaskManager {
 	public Task createOrUpdate(Task task) throws IllegalArgumentException {
 		Task result;
 		checkDataCreateOrUpdate(task);
-		TaskType taskType = getTypeTask(task);
 		if (task.getId() == null) {
-			result = switch (task) {
-				case Epic e -> new Epic(getGenerateSequence(), (Epic) task);
-				case Subtask s -> new Subtask(getGenerateSequence(), (Subtask) task);
-				case Task t -> new Task(getGenerateSequence(), task);
-			};
-			tasks.putIfAbsent(taskType, new ArrayList<>());
-			tasks.get(taskType).add(result);
-			tasksTaskTypeInd.put(result.getId(), taskType);
+			result = task.create(getGenerateSequence(), task);
+			tasks.putIfAbsent(result.getTypeTask(), new ArrayList<>());
+			tasks.get(result.getTypeTask()).add(result);
+			tasksTaskTypeInd.put(result.getId(), result.getTypeTask());
 		} else {
-			result = switch (findTaskById(task.getId())) {
-				case Epic e -> e.update((Epic) task);
-				case Subtask s -> s.update((Subtask) task);
-				case Task t -> t.update(task);
-			};
+			result = findTaskById(task.getId()).update(task);
 		}
-		if (taskType == TaskType.SUBTASK) {
-			var epicId = ((Subtask) result).getEpicId();
-			var epic = (Epic) findTaskById(epicId);
-			epic.rebuildSubtask((Subtask) result);
+		if (result.getTypeTask() == TaskType.SUBTASK) {
+			((Subtask) result).getEpic().rebuildSubtask((Subtask) result);
 		}
 		return result;
 	}
 
-	public TaskType getTypeTask(Task task) {
-		return switch (task) {
-			case Epic e -> TaskType.EPIC;
-			case Subtask s -> TaskType.SUBTASK;
-			case Task t -> TaskType.TASK;
-		};
-	}
-
 	private void checkDataCreateOrUpdate(Task task) throws IllegalArgumentException {
-		if (task == null) throw new IllegalArgumentException("Не передан объект задачи!");
-		if (task.getId() == null) return;
-		if (!isExistTask(task.getId())) throw new IllegalArgumentException("Задача по ID не найдена");
+		if (task == null) {throw new IllegalArgumentException("Не передан объект задачи!");}
+		if (task.getId() == null) {return;}
+		if (!isExistTask(task.getId())) {throw new IllegalArgumentException("Задача по ID не найдена");}
 	}
 
 	public void removeAllTask(TaskType taskType) {
-		if (!tasks.containsKey(taskType)) return;
-		switch (taskType) {
-			case EPIC -> removeAllTask(TaskType.SUBTASK);
-			case SUBTASK -> {}
-			default -> {}
-		}
-
+		if (!tasks.containsKey(taskType)) {return;}
+		if (taskType == TaskType.EPIC) {removeAllTask(TaskType.SUBTASK);}
 		for (Task task : tasks.get(taskType)) {
 			tasksTaskTypeInd.remove(task.getId());
 		}
@@ -85,21 +61,14 @@ public class TaskManager {
 	}
 
 	public void removeTask(Integer taskId) throws IllegalArgumentException {
-		PatchTask patchTask = getPatchTask(taskId);
-		switch (patchTask.getTaskType()) {
-			case EPIC -> {
-				var epic = (Epic) getTaskByPatch(patchTask);
-				for (Subtask subtask : epic.getSubtasks()) {
+		switch (findTaskById(taskId)) {
+			case Epic e -> {
+				for (Subtask subtask : e.getSubtasks()) {
 					removeTaskById(subtask.getId());
 				}
 			}
-			case SUBTASK -> {
-				var subtask = (Subtask) getTaskByPatch(patchTask);
-				var epicId = subtask.getEpicId();
-				var epic = (Epic) findTaskById(epicId);
-				epic.removeSubtask(subtask.getId());
-
-			}
+			case Subtask s -> s.getEpic().removeSubtask(s.getId());
+			default -> {}
 		}
 		removeTaskById(taskId);
 	}
@@ -119,16 +88,12 @@ public class TaskManager {
 		return tasks.get(patchTask.getTaskType()).get(patchTask.getIndex());
 	}
 
-	private Task getTaskByPatch(PatchTask patchTask) throws IllegalArgumentException {
-		return tasks.get(patchTask.getTaskType()).get(patchTask.getIndex());
-	}
-
 	private PatchTask getPatchTask(Integer taskId) throws IllegalArgumentException {
-		if (!isExistTask(taskId)) throw new IllegalArgumentException("Задача по ID не найдена");
+		if (!isExistTask(taskId)) {throw new IllegalArgumentException("Задача по ID не найдена");}
 		TaskType taskType = tasksTaskTypeInd.get(taskId);
 		for (int i = 0; i < tasks.get(taskType).size(); i++) {
 			var currentTaskId = tasks.get(taskType).get(i).getId();
-			if (currentTaskId != taskId) continue;
+			if (currentTaskId != taskId) {continue;}
 			return new PatchTask(taskType, i);
 		}
 		throw new IllegalArgumentException("Задача по ID не найдена");

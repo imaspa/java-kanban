@@ -14,7 +14,7 @@ public class Main {
 		TaskManager tm = new TaskManager();
 		var listTask = generateTask(tm, 3);
 		var listTaskEpic = generateEpic(tm, 2);
-		var listTaskSubtask = generateSubTask(tm, 3,  listTaskEpic.get(1));
+		var listTaskSubtask = generateSubTask(tm, 3, listTaskEpic.get(1));
 		showHead("Исходные данные");
 		showAllTask(tm);
 		showIndex(tm);
@@ -53,7 +53,7 @@ public class Main {
 		Main.showIndex(tm);
 
 		showHead("Обработка ошибок. попытка удаления не существующего объекта");
-		executeToTryCatchBlock(tm::createOrUpdate,new Task(500, "", ""));
+		executeToTryCatchBlock(tm::createOrUpdate, new Task(500, "", ""));
 	}
 
 	public static void executeToTryCatchBlock(Consumer<Task> taskConsumer, Task task) {
@@ -103,7 +103,7 @@ public class Main {
 		System.out.println("Индекс:");
 		var tasks = tm.getTasksTaskTypeInd();
 		for (var id : tasks.keySet()) {
-			System.out.println("\t%d->%s ".formatted(id, tasks.get(id)));
+			System.out.println("\t%d->%s".formatted(id, tasks.get(id)));
 		}
 	}
 
@@ -119,7 +119,5 @@ public class Main {
 		int padding = (width - title.length()) / 2;
 		return " ".repeat(padding) + title + " ".repeat(padding);
 	}
-
-
 }
 

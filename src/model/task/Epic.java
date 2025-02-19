@@ -1,15 +1,17 @@
 package model.task;
 
 import model.TaskStatus;
+import model.TaskType;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-public class Epic extends Task{
+public class Epic extends Task {
 	private List<Subtask> subtasks = new ArrayList<>();
 
-	public Epic(Integer id, Epic task) {		super(id, task);	}
+	public Epic(Integer id, Epic task) {super(id, task);}
 
 	public Epic(String name, String description) {
 		super(name, description);
@@ -17,18 +19,19 @@ public class Epic extends Task{
 
 	@Override
 	public String toString() {
-		return "Epic{" +
-				super.toString()+
-				"\t\t\tsubtasksId: %s".formatted(subtasks.stream()
+		var subtaskStr = "\t\t\tsubtasksId: %s".formatted(
+				subtasks.stream()
 						.map(subtask -> "\n\t\t\t" + subtask)
-						.collect(Collectors.joining(""))) +
-				"}" ;
+						.collect(Collectors.joining("")));
+		return "Epic{" +
+				super.toString() +
+				subtaskStr +
+				"}";
 	}
 
 	public List<Subtask> getSubtasks() {
 		return subtasks;
 	}
-
 
 	public void removeSubtask(Integer subtaskId) {
 		subtasks.removeIf(subtask -> subtask.getId() == subtaskId);
@@ -36,18 +39,15 @@ public class Epic extends Task{
 	}
 
 	private Subtask findSubtask(Subtask subtask) {
-		for (Subtask curent : subtasks) {
-			if (curent.getId() == subtask.getId()) {
-				return curent;
-			}
-		}
-		return null;
+		return subtasks.stream()
+				.filter(curent -> curent.getId() == subtask.getId())
+				.findFirst()
+				.orElse(null);
 	}
 
-	public Epic update(Epic task) throws IllegalArgumentException{
-		super.update(task);
-		this.subtasks = task.getSubtasks();
-		return this;
+	@Override
+	public TaskType getTypeTask() {
+		return TaskType.EPIC;
 	}
 
 	public void tuneStatus() {
@@ -55,22 +55,32 @@ public class Epic extends Task{
 	}
 
 	private TaskStatus calcEpicTaskStatus() {
-		Integer counter = 0;
-		for (Subtask subTask : subtasks) {
-			if (subTask.getTaskStatus()==TaskStatus.NEW) counter++;
-		}
-		if (counter == subtasks.size()) return TaskStatus.NEW;
-		counter = 0;
-		for (Subtask subTask : subtasks) {
-			if (subTask.getTaskStatus()==TaskStatus.DONE) counter++;
-		}
-		if (counter == subtasks.size()) return TaskStatus.DONE;
-		return TaskStatus.IN_PROGRESS;
+		if (subtasks.isEmpty()) return TaskStatus.NEW;
+		Set<TaskStatus> taskStatusSet = subtasks.stream()
+				.map(Subtask::getTaskStatus)
+				.collect(Collectors.toSet());
+		return (taskStatusSet.size() == 1) ? taskStatusSet.iterator().next() : TaskStatus.IN_PROGRESS;
 	}
+
+	@Override
+	public Task create(Integer id, Task task) {
+		return new Epic(id, (Epic) task);
+	}
+
+	@Override
+	public Task update(Task task) throws IllegalArgumentException {
+		super.update(task);
+		this.subtasks = ((Epic) task).getSubtasks();
+		return this;
+	}
+
 	public void rebuildSubtask(Subtask subtask) {
 		Subtask targetSubtask = findSubtask(subtask);
-		if (targetSubtask!=null) targetSubtask = subtask;
-		else subtasks.add(subtask);
+		if (targetSubtask != null) {
+			targetSubtask.update(subtask);
+		} else {
+			subtasks.add(subtask);
+		}
 		tuneStatus();
 	}
 }

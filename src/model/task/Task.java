@@ -1,6 +1,7 @@
 package model.task;
 
 import model.TaskStatus;
+import model.TaskType;
 
 import java.util.Objects;
 
@@ -35,17 +36,21 @@ public class Task {
 		this.id = id;
 	}
 
+	public TaskType getTypeTask() {
+		return TaskType.TASK;
+	}
+
 	@Override
 	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
+		if (this == o) {return true;}
+		if (o == null || getClass() != o.getClass()) {return false;}
 		Task task = (Task) o;
-		return Objects.equals(id, task.id) && Objects.equals(name, task.name) && Objects.equals(description, task.description) && taskStatus == task.taskStatus;
+		return Objects.equals(id, task.id);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(id, name, description, taskStatus);
+		return Objects.hash(id);
 	}
 
 	public Integer getId() {
@@ -64,6 +69,18 @@ public class Task {
 		this.taskStatus = taskStatus;
 	}
 
+	public Task create(Integer id, Task task) {
+		return new Task(id, task);
+	}
+
+	public Task update(Task task) {
+		if (task == null) {throw new IllegalArgumentException("Переданный объект не может быть null");}
+		this.name = task.getName();
+		this.description = task.getName();
+		this.name = task.getName();
+		return this;
+	}
+
 	@Override
 	public String toString() {
 		return "Task{" +
@@ -72,13 +89,5 @@ public class Task {
 				", description='" + description + '\'' +
 				", taskStatus=" + taskStatus +
 				'}';
-	}
-
-	public Task update(Task task) {
-		if (task == null) {		throw new IllegalArgumentException("Переданный объект не может быть null");		}
-		this.name = task.getName();
-		this.description = task.getName();
-		this.name = task.getName();
-		return this;
 	}
 }

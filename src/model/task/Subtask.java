@@ -1,31 +1,45 @@
 package model.task;
 
-public class Subtask extends Task {
-	private Integer epicId;
+import model.TaskType;
 
-	public Subtask(Integer id, Subtask task) {
-		super(id, task);
-		epicId = task.getEpicId();
+public class Subtask extends Task {
+	private Epic epic;
+
+	public Subtask(Integer id, Subtask subtask) {
+		super(id, subtask);
+		this.epic = subtask.getEpic();
 	}
+
 	public Subtask(String name, String description, Epic epic) {
 		super(name, description);
-		epicId = epic.getId();
+		this.epic = epic;
 	}
 
-	public Integer getEpicId() {
-		return epicId;
+	public Epic getEpic() {
+		return epic;
+	}
+
+	@Override
+	public TaskType getTypeTask() {
+		return TaskType.SUBTASK;
 	}
 
 	@Override
 	public String toString() {
 		return "Subtask{" +
-				"epicId=" + epicId +
+				"epic=" + epic.getId() +
 				"} " + super.toString();
 	}
 
-	public Subtask update(Subtask task) throws IllegalArgumentException{
+	@Override
+	public Task create(Integer id, Task task) {
+		return new Subtask(id,(Subtask) task);
+	}
+
+	@Override
+	public Task update(Task task)  throws IllegalArgumentException {
 		super.update(task);
-		this.epicId = task.getEpicId();
+		this.epic = ((Subtask)task).getEpic();
 		return this;
 	}
 }
