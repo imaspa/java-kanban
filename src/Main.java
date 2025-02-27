@@ -1,5 +1,7 @@
 import model.TaskStatus;
 import model.TaskType;
+import model.manager.HistoryManager;
+import model.manager.Managers;
 import model.manager.TaskManager;
 import model.task.Epic;
 import model.task.Subtask;
@@ -11,14 +13,26 @@ import java.util.function.Consumer;
 public class Main {
 
 	public static void main(String[] args) {
-		TaskManager tm = new TaskManager();
-		var listTask = generateTask(tm, 3);
-		var listTaskEpic = generateEpic(tm, 2);
-		var listTaskSubtask = generateSubTask(tm, 3, listTaskEpic.get(1));
+		TaskManager taskManager = Managers.getDefault();
+		var listTask = generateTask(taskManager, 3);
+		var listTaskEpic = generateEpic(taskManager, 2);
+		var listTaskSubtask = generateSubTask(taskManager, 3, listTaskEpic.get(1));
 		showHead("Исходные данные");
-		showAllTask(tm);
-		showIndex(tm);
+		showAllTask(taskManager);
 
+		taskManager.getTaskById(1);
+		taskManager.getTaskById(2);
+		taskManager.getTaskById(3);
+		taskManager.getTaskById(4);
+		taskManager.getTaskById(5);
+		taskManager.getTaskById(6);
+		taskManager.getTaskById(1);
+		taskManager.getTaskById(7);
+		taskManager.getTaskById(8);
+		taskManager.getTaskById(1);
+		taskManager.getTaskById(1);
+		showHead("Иситория просмотрв");
+		showHistory(taskManager);
 
 		var subtask1 = listTaskSubtask.get(0);
 		subtask1.setTaskStatus(TaskStatus.DONE);
@@ -26,34 +40,33 @@ public class Main {
 		subtask2.setTaskStatus(TaskStatus.DONE);
 		var subtask3 = listTaskSubtask.get(2);
 		subtask3.setTaskStatus(TaskStatus.DONE);
-		tm.createOrUpdate(subtask1);
+		taskManager.createOrUpdate(subtask1);
 		showHead("Обновление статуса в Done");
-		showAllTask(tm);
+		showAllTask(taskManager);
 
 		subtask3.setTaskStatus(TaskStatus.NEW);
-		tm.createOrUpdate(subtask1);
+		taskManager.createOrUpdate(subtask1);
 		showHead("Обновление статуса EPIC в IN_PROGRESS");
-		showAllTask(tm);
+		showAllTask(taskManager);
 
-		tm.removeTask(8);
+		taskManager.removeTask(8);
 		showHead("Обновление статуса EPIC в DONE (удаляем Subtask)");
-		showAllTask(tm);
+		showAllTask(taskManager);
 
 		showHead("Удаляем задачу Epic (+ связанные Subtask)");
-		tm.removeTask(5);
-		showAllTask(tm);
+		taskManager.removeTask(5);
+		showAllTask(taskManager);
 
 //		showHead("Удалить все задачи EPIC (чтобы не было битых ссылок. удаляем и Subtask)");
 //		tm.removeAllTask(TaskType.EPIC);
 //		showAllTask(tm);
 
 		showHead("Удалить все задачи TASK");
-		tm.removeAllTask(TaskType.TASK);
-		showAllTask(tm);
-		Main.showIndex(tm);
+		taskManager.removeAllTask(TaskType.TASK);
+		showAllTask(taskManager);
 
 		showHead("Обработка ошибок. попытка удаления не существующего объекта");
-		executeToTryCatchBlock(tm::createOrUpdate, new Task(500, "", ""));
+		executeToTryCatchBlock(taskManager::createOrUpdate, new Task(500, "", ""));
 	}
 
 	public static void executeToTryCatchBlock(Consumer<Task> taskConsumer, Task task) {
@@ -99,14 +112,11 @@ public class Main {
 		}
 	}
 
-	public static void showIndex(TaskManager tm) {
-		System.out.println("Индекс:");
-		var tasks = tm.getTasksTaskTypeInd();
-		for (var id : tasks.keySet()) {
-			System.out.println("\t%d->%s".formatted(id, tasks.get(id)));
+	public static void showHistory(TaskManager tm) {
+		for (var current :  tm.getHistory()) {
+			System.out.println("\t%s(%s)->%s (%s)".formatted(current.getTypeTask().getName(),current.getTypeTask(), current.getId(),current.getName()));
 		}
 	}
-
 
 	public static void showHead(String title) {
 		int width = 100;
@@ -120,4 +130,3 @@ public class Main {
 		return " ".repeat(padding) + title + " ".repeat(padding);
 	}
 }
-
