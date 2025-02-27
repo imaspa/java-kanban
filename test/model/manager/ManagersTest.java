@@ -6,33 +6,33 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ManagersTest {
 
-	@Test
-	void getDefaultTest() {
-		TaskManager taskManager = Managers.getDefault();
+    @Test
+    void getDefaultTest() {
+        TaskManager taskManager = Managers.getDefault();
 
-		assertNotNull(taskManager);
-	}
+        assertNotNull(taskManager);
+    }
 
-	@Test
-	void getDefaultHistoryTest() {
-		HistoryManager historyManager = Managers.getDefaultHistory();
+    @Test
+    void getDefaultHistoryTest() {
+        HistoryManager historyManager = Managers.getDefaultHistory();
 
-		assertNotNull(historyManager);
-	}
+        assertNotNull(historyManager);
+    }
 
-	@Test
-	void shouldReturnDifferentTaskManagerInstances() {
-		TaskManager taskManager1 = Managers.getDefault();
-		TaskManager taskManager2 = Managers.getDefault();
+    @Test
+    void shouldReturnDifferentTaskManagerInstances() {
+        TaskManager taskManager1 = Managers.getDefault();
+        TaskManager taskManager2 = Managers.getDefault();
 
-		assertNotSame(taskManager1, taskManager2);
-	}
+        assertNotSame(taskManager1, taskManager2);
+    }
 
-	@Test
-	void shouldReturnDifferentHistoryManagerInstances() {
-		HistoryManager historyManager1 = Managers.getDefaultHistory();
-		HistoryManager historyManager2 = Managers.getDefaultHistory();
+    @Test
+    void shouldReturnDifferentHistoryManagerInstances() {
+        HistoryManager historyManager1 = Managers.getDefaultHistory();
+        HistoryManager historyManager2 = Managers.getDefaultHistory();
 
-		assertNotSame(historyManager1, historyManager2);
-	}
+        assertNotSame(historyManager1, historyManager2);
+    }
 }
