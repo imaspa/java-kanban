@@ -21,10 +21,7 @@ public class Epic extends Task {
 
     @Override
     public String toString() {
-        var subtaskStr = "\t\t\tsubtasksId: %s".
-                formatted(subtasks.stream().
-                        map(subtask -> "\n\t\t\t" + subtask).
-                        collect(Collectors.joining("")));
+        var subtaskStr = "\t\t\tsubtasksId: %s".formatted(subtasks.stream().map(subtask -> "\n\t\t\t" + subtask).collect(Collectors.joining("")));
         return "Epic{" + super.toString() + subtaskStr + "}";
     }
 
@@ -33,12 +30,12 @@ public class Epic extends Task {
     }
 
     public void removeSubtask(Integer subtaskId) {
-        subtasks.removeIf(subtask -> subtask.getId() == subtaskId);
+        subtasks.removeIf(subtask -> subtask.getId().equals(subtaskId));
         tuneStatus();
     }
 
     private Subtask findSubtask(Subtask subtask) {
-        return subtasks.stream().filter(curent -> curent.getId() == subtask.getId()).findFirst().orElse(null);
+        return subtasks.stream().filter(curent -> curent.getId().equals(subtask.getId())).findFirst().orElse(null);
     }
 
     @Override
@@ -52,9 +49,7 @@ public class Epic extends Task {
 
     private TaskStatus calcEpicTaskStatus() {
         if (subtasks.isEmpty()) return TaskStatus.NEW;
-        Set<TaskStatus> taskStatusSet = subtasks.stream().
-                map(Subtask::getTaskStatus).
-                collect(Collectors.toSet());
+        Set<TaskStatus> taskStatusSet = subtasks.stream().map(Subtask::getTaskStatus).collect(Collectors.toSet());
         return (taskStatusSet.size() == 1) ? taskStatusSet.iterator().next() : TaskStatus.IN_PROGRESS;
     }
 
