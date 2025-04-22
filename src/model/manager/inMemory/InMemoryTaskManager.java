@@ -103,6 +103,7 @@ public class InMemoryTaskManager implements TaskManager {
         PatchTask patchTask = getPatchTask(taskId);
         tasks.get(patchTask.getTaskType()).remove(patchTask.getIndex());
         tasksTaskTypeInd.remove(taskId);
+        history.remove(taskId);
     }
 
     @Override
@@ -123,7 +124,7 @@ public class InMemoryTaskManager implements TaskManager {
         var taskChunk = tasks.get(taskType);
         for (int i = 0; i < taskChunk.size(); i++) {
             var currentTaskId = taskChunk.get(i).getId();
-            if (currentTaskId != taskId) {
+            if (!currentTaskId.equals(taskId)) {
                 continue;
             }
             return new PatchTask(taskType, i);

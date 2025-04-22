@@ -30,6 +30,7 @@ public class Main {
         taskManager.getTaskById(8);
         taskManager.getTaskById(1);
         taskManager.getTaskById(1);
+        taskManager.getTaskById(2);
         showHead("Иситория просмотрв");
         showHistory(taskManager);
 
