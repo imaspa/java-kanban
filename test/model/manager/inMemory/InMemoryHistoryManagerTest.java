@@ -29,6 +29,8 @@ class InMemoryHistoryManagerTest {
 
     @Test
     void shouldEqualsLimit() {
+        Assertions.assertTrue(historyManager.getHistory().isEmpty());
+
         for (int i = 0; i < 30; i++) {
             historyManager.add(createTask(i));
         }
@@ -37,6 +39,8 @@ class InMemoryHistoryManagerTest {
 
     @Test
     void shouldReplaceExistingTaskWhenAddingWithSameId() {
+        Assertions.assertTrue(historyManager.getHistory().isEmpty());
+
         historyManager.add(createTask(1));
         Assertions.assertEquals(1, historyManager.getHistory().size());
 
@@ -50,6 +54,8 @@ class InMemoryHistoryManagerTest {
 
     @Test
     void shouldAllowAddingAfterRemoving() {
+        Assertions.assertTrue(historyManager.getHistory().isEmpty());
+
         historyManager.add(createTask(1));
         historyManager.add(createTask(1, "актуальное"));
         Assertions.assertEquals(1, historyManager.getHistory().size());
@@ -64,6 +70,8 @@ class InMemoryHistoryManagerTest {
 
     @Test
     void shouldMaintainOrderWhenReplacingTasks() {
+        Assertions.assertTrue(historyManager.getHistory().isEmpty());
+
         historyManager.add(createTask(1));
         historyManager.add(createTask(2));
         historyManager.add(createTask(3));
@@ -72,7 +80,9 @@ class InMemoryHistoryManagerTest {
         Assertions.assertEquals(3, historyManager.getHistory().size());
         var historyList = historyManager.getHistory();
 
-        ArrayList<String> historyListTskNames = (ArrayList<String>) historyList.stream().map(Task::getName).collect(Collectors.toList());
+        ArrayList<String> historyListTskNames = (ArrayList<String>) historyList.stream().
+                map(Task::getName).
+                collect(Collectors.toList());
         Assertions.assertArrayEquals(new String[]{"Наименование_1", "Наименование_3", "Наименование_актуальная_2"}, historyListTskNames.toArray());
     }
 
