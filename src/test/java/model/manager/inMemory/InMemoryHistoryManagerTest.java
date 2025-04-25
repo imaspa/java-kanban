@@ -80,9 +80,9 @@ public class InMemoryHistoryManagerTest {
         Assertions.assertEquals(3, historyManager.getHistory().size());
         var historyList = historyManager.getHistory();
 
-        ArrayList<String> historyListTskNames = (ArrayList<String>) historyList.stream().
-                map(Task::getName).
-                collect(Collectors.toList());
+        ArrayList<String> historyListTskNames = (ArrayList<String>) historyList.stream()
+                .map(Task::getName)
+                .collect(Collectors.toList());
         Assertions.assertArrayEquals(new String[]{"Наименование_1", "Наименование_3", "Наименование_актуальная_2"}, historyListTskNames.toArray());
     }
 
