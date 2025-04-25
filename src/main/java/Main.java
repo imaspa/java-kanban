@@ -12,6 +12,21 @@ import java.util.function.Consumer;
 public class Main {
 
     public static void main(String[] args) {
+        modeFile();
+      }
+
+    public static void modeFile() {
+        TaskManager taskManager = Managers.getDefault();
+        showHead("Исходные данные");
+        showAllTask(taskManager);
+        var listTask = generateTask(taskManager, 3);
+        var listTaskEpic = generateEpic(taskManager, 2);
+        var listTaskSubtask = generateSubTask(taskManager, 3, listTaskEpic.get(1));
+        showHead("добавленные данные");
+        showAllTask(taskManager);
+    }
+
+    public static void modeInMemory() {
         TaskManager taskManager = Managers.getDefault();
         var listTask = generateTask(taskManager, 3);
         var listTaskEpic = generateEpic(taskManager, 2);

@@ -11,6 +11,13 @@ public class Task {
     private String description;
     private TaskStatus taskStatus;
 
+    public Task(Integer id, String name, String description, TaskStatus taskStatus) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.taskStatus = taskStatus;
+    }
+
     public Task(Integer id, String name, String description) {
         this.id = id;
         this.name = name;
@@ -65,6 +72,10 @@ public class Task {
         return name;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
     public TaskStatus getTaskStatus() {
         return taskStatus;
     }
@@ -85,6 +96,14 @@ public class Task {
         this.description = task.getName();
         this.name = task.getName();
         return this;
+    }
+
+    public String taskToString(String separator) {
+        return id + separator
+                + getTypeTask().toString() + separator
+                + name + separator
+                + description + separator
+                + taskStatus.toString() + separator;
     }
 
     @Override

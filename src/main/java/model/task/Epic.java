@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 public class Epic extends Task {
     private List<Subtask> subtasks = new ArrayList<>();
 
-    public Epic(Integer id, Epic task) {
+    public Epic(Integer id, Task task) {
         super(id, task);
     }
 

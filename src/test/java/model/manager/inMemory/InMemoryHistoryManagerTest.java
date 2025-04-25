@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
-class InMemoryHistoryManagerTest {
+public class InMemoryHistoryManagerTest {
     private HistoryManager historyManager;
 
 
