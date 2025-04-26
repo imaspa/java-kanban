@@ -2,6 +2,7 @@ package model.manager.inFile;
 
 import model.TaskStatus;
 import model.TaskType;
+import model.exception.StorageException;
 import model.manager.HistoryManager;
 import model.manager.TaskManager;
 import model.manager.inMemory.InMemoryTaskManager;
@@ -56,7 +57,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
                     .map(entity -> new LineCsvDto(entity, this.getStorageSeparator()))
                     .toList();
         } catch (IOException e) {
-            throw new RuntimeException("Ошибка при чтении файла: " + this.getStoragePatch(), e);
+            throw new StorageException("Ошибка при чтении файла: " + this.getStoragePatch(), e);
         }
     }
 
@@ -131,8 +132,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
         try {
             createOrAppendCSVFile(storagePatch, storageHead, line);
         } catch (IOException e) {
-            System.err.println("Ошибка при работе с файлом: " + e.getMessage());
+            throw new StorageException("Ошибка при чтении файла: " + this.getStoragePatch(), e);
         }
-
     }
 }

@@ -47,7 +47,9 @@ public class FileUtils {
     }
 
     public static void appendLineToFile(Path path, String content) throws IOException {
-        if (content == null) return;
+        if (content == null) {
+            return;
+        }
         Files.write(path, content.getBytes(), StandardOpenOption.APPEND);
     }
 
