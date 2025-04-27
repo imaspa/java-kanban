@@ -15,9 +15,9 @@ import java.util.Map;
 public class InMemoryTaskManager implements TaskManager {
 
     private final HistoryManager history;
-    private Integer sequenceId;
-    private Map<TaskType, List<Task>> tasks = new HashMap<>();
-    private Map<Integer, TaskType> tasksTaskTypeInd = new HashMap<>();
+    protected Integer sequenceId;
+    protected Map<TaskType, List<Task>> tasks = new HashMap<>();
+    protected Map<Integer, TaskType> tasksTaskTypeInd = new HashMap<>();
 
     public InMemoryTaskManager(HistoryManager historyManager) {
         sequenceId = 0;
@@ -111,7 +111,7 @@ public class InMemoryTaskManager implements TaskManager {
         return tasksTaskTypeInd.containsKey(taskId);
     }
 
-    private Task findTaskById(Integer taskId) throws IllegalArgumentException {
+    protected Task findTaskById(Integer taskId) throws IllegalArgumentException {
         PatchTask patchTask = getPatchTask(taskId);
         return tasks.get(patchTask.getTaskType()).get(patchTask.getIndex());
     }

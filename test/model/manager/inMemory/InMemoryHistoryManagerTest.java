@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
-class InMemoryHistoryManagerTest {
+public class InMemoryHistoryManagerTest {
     private HistoryManager historyManager;
 
 
@@ -80,9 +80,9 @@ class InMemoryHistoryManagerTest {
         Assertions.assertEquals(3, historyManager.getHistory().size());
         var historyList = historyManager.getHistory();
 
-        ArrayList<String> historyListTskNames = (ArrayList<String>) historyList.stream().
-                map(Task::getName).
-                collect(Collectors.toList());
+        ArrayList<String> historyListTskNames = (ArrayList<String>) historyList.stream()
+                .map(Task::getName)
+                .collect(Collectors.toList());
         Assertions.assertArrayEquals(new String[]{"Наименование_1", "Наименование_3", "Наименование_актуальная_2"}, historyListTskNames.toArray());
     }
 
