@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 public final class TestUtils {
     private TestUtils() {
     }
+
     public static Task createTaskWithId(TaskType taskType, Integer id) {
         return createTaskWithId(taskType, id, null, null);
     }
@@ -28,6 +29,7 @@ public final class TestUtils {
             case SUBTASK -> new Subtask(id, newName, "", TaskStatus.NEW, epic, LocalDateTime.now(), Duration.ZERO);
         };
     }
+
     public static Task updateTask(Task task, String newName) {
         return switch (task.getTypeTask()) {
             case TASK ->
@@ -43,8 +45,8 @@ public final class TestUtils {
         return createTask(taskType, null, null);
     }
 
-    public static Task createTask(TaskType taskType,  String name) {
-        return createTask(taskType,  name, null);
+    public static Task createTask(TaskType taskType, String name) {
+        return createTask(taskType, name, null);
     }
 
     public static Task createTask(TaskType taskType, String name, Epic epic) {

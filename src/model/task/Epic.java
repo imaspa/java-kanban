@@ -41,10 +41,6 @@ public class Epic extends Task {
 
     }
 
-    public void setEndTime(LocalDateTime endTime) {
-        this.endTime = endTime;
-    }
-
     private Subtask findSubtask(Subtask subtask) {
         return subtasks.stream()
                 .filter(current -> current.getId().equals(subtask.getId()))
@@ -60,6 +56,10 @@ public class Epic extends Task {
     @Override
     public LocalDateTime getEndTime() {
         return endTime;
+    }
+
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
     }
 
     public void tuneTask() {

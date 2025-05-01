@@ -1,5 +1,6 @@
 import model.TaskStatus;
 import model.TaskType;
+import model.exception.TaskValidationException;
 import model.manager.Managers;
 import model.manager.TaskManager;
 import model.task.Epic;
@@ -15,11 +16,11 @@ import java.util.function.Consumer;
 
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws TaskValidationException {
         modeFile();
-      }
+    }
 
-    public static void modeFile() {
+    public static void modeFile() throws TaskValidationException {
         TaskManager taskManager = Managers.getDefault();
         showHead("Исходные данные");
         showAllTask(taskManager);
@@ -31,7 +32,7 @@ public class Main {
 //        System.out.println(taskManager.getPrioritizedTasks());
     }
 
-    public static void modeInMemory() {
+    public static void modeInMemory() throws TaskValidationException {
         TaskManager taskManager = Managers.getDefault();
         var listTask = generateTask(taskManager, 3);
         var listTaskEpic = generateEpic(taskManager, 2);
@@ -86,7 +87,7 @@ public class Main {
         showAllTask(taskManager);
 
         showHead("Обработка ошибок. попытка удаления не существующего объекта");
-        executeToTryCatchBlock(taskManager::createOrUpdate, new Task(500, "", "",getRandomLocalDateTime(),getRandomDuration()));
+//        executeToTryCatchBlock(taskManager::createOrUpdate, new Task(500, "", "",getRandomLocalDateTime(),getRandomDuration()));
     }
 
     public static void executeToTryCatchBlock(Consumer<Task> taskConsumer, Task task) {
@@ -97,15 +98,15 @@ public class Main {
         }
     }
 
-    public static ArrayList<Task> generateTask(TaskManager tm, Integer count) {
+    public static ArrayList<Task> generateTask(TaskManager tm, Integer count) throws TaskValidationException {
         ArrayList<Task> tasksList = new ArrayList<>();
         for (int i = 0; i < count; i++) {
-            tasksList.add(new Task("Наименование_%d".formatted(i + 1), "Описание_%d".formatted(i + 1),getRandomLocalDateTime(),getRandomDuration()));
+            tasksList.add(new Task("Наименование_%d".formatted(i + 1), "Описание_%d".formatted(i + 1), getRandomLocalDateTime(), getRandomDuration()));
         }
         return (ArrayList<Task>) tm.createOrUpdate(tasksList);
     }
 
-    public static ArrayList<Task> generateEpic(TaskManager tm, Integer count) {
+    public static ArrayList<Task> generateEpic(TaskManager tm, Integer count) throws TaskValidationException {
         ArrayList<Task> tasksList = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             tasksList.add(new Epic("Эпик Наименование_%d".formatted(i + 1), "Описание_%d".formatted(i + 1)));
@@ -113,10 +114,10 @@ public class Main {
         return (ArrayList<Task>) tm.createOrUpdate(tasksList);
     }
 
-    public static ArrayList<Task> generateSubTask(TaskManager tm, Integer count, Task epic) {
+    public static ArrayList<Task> generateSubTask(TaskManager tm, Integer count, Task epic) throws TaskValidationException {
         ArrayList<Task> tasksList = new ArrayList<>();
         for (int i = 0; i < count; i++) {
-            tasksList.add(new Subtask("Подзадача Наименование_%d".formatted(i + 1), "Описание_%d".formatted(i + 1), (Epic) epic,getRandomLocalDateTime(),getRandomDuration()));
+            tasksList.add(new Subtask("Подзадача Наименование_%d".formatted(i + 1), "Описание_%d".formatted(i + 1), (Epic) epic, getRandomLocalDateTime(), getRandomDuration()));
         }
         return (ArrayList<Task>) tm.createOrUpdate(tasksList);
     }

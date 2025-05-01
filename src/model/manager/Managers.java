@@ -14,7 +14,7 @@ public final class Managers {
     }
 
     public static TaskManager getMemory() {
-        return new InMemoryTaskManager(getDefaultHistory(),getDefaultAsisPrioritized());
+        return new InMemoryTaskManager(getDefaultHistory(), getDefaultPrioritized());
     }
 
     public static TaskManager getFile() {
@@ -26,14 +26,14 @@ public final class Managers {
         Path storagePatch = Paths.get(fileName == null ? "storage/taskManager.csv" : fileName).toAbsolutePath().normalize();
         String storageHead = "id,TaskType,name,description,taskStatus,epic,startTime,endTime,duration";
         Character storageSeparator = ',';
-        return new FileBackedTaskManager(getDefaultHistory(),getDefaultAsisPrioritized(), storagePatch, storageHead, storageSeparator);
+        return new FileBackedTaskManager(getDefaultHistory(), getDefaultPrioritized(), storagePatch, storageHead, storageSeparator);
     }
 
     public static HistoryManager getDefaultHistory() {
         return new InMemoryHistoryManager();
     }
 
-    public static PrioritizedTasks getDefaultAsisPrioritized() {
+    public static PrioritizedTasks getDefaultPrioritized() {
         return new PrioritizedTasks();
     }
 }

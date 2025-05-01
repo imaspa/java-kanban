@@ -16,10 +16,11 @@ import java.io.IOException;
 import java.util.List;
 
 import static model.manager.helper.TestUtils.createTask;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class FileBackedTaskManagerWithDataTest  {
+public class FileBackedTaskManagerWithDataTest {
     private TaskManager taskManager;
     private File tempFile;
 
@@ -52,7 +53,11 @@ public class FileBackedTaskManagerWithDataTest  {
     @Test
     void addNewTask() {
         TaskType taskType = TaskType.TASK;
-        final Task task = taskManager.createOrUpdate(createTask(taskType));
+        final Task task = assertDoesNotThrow(
+                () -> taskManager.createOrUpdate(createTask(taskType)),
+                "Не ожидалось исключения при создании/изменении задачи"
+        );
+
         final int taskId = task.getId();
         final Task savedTask = taskManager.getTaskById(taskId);
 
@@ -69,7 +74,10 @@ public class FileBackedTaskManagerWithDataTest  {
     @Test
     void addNewEpicTask() {
         TaskType taskType = TaskType.EPIC;
-        final Task task = taskManager.createOrUpdate(createTask(taskType));
+        final Task task = assertDoesNotThrow(
+                () -> taskManager.createOrUpdate(createTask(taskType)),
+                "Не ожидалось исключения при создании/изменении задачи"
+        );
         final int taskId = task.getId();
         final Task savedTask = taskManager.getTaskById(taskId);
 
@@ -85,10 +93,16 @@ public class FileBackedTaskManagerWithDataTest  {
 
     @Test
     void addNewSubtaskTask() {
-        final Task epicTask = taskManager.createOrUpdate(createTask(TaskType.EPIC));
+        final Task epicTask = assertDoesNotThrow(
+                () -> taskManager.createOrUpdate(createTask(TaskType.EPIC)),
+                "Не ожидалось исключения при создании/изменении задачи"
+        );
 
         TaskType taskType = TaskType.SUBTASK;
-        final Task task = taskManager.createOrUpdate(createTask(taskType,null, (Epic) epicTask));
+        final Task task = assertDoesNotThrow(
+                () -> taskManager.createOrUpdate(createTask(taskType, null, (Epic) epicTask)),
+                "Не ожидалось исключения при создании/изменении задачи"
+        );
         final int taskId = task.getId();
         final Task savedTask = taskManager.getTaskById(taskId);
 
@@ -110,6 +124,4 @@ public class FileBackedTaskManagerWithDataTest  {
         assertNotNull(tasks, "Задачи не возвращаются.");
         assertEquals(1, tasks.size(), "Неверное количество задач.");
     }
-
-
 }
