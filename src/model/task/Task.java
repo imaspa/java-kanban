@@ -15,7 +15,7 @@ public class Task {
     private LocalDateTime startTime;
     private Duration duration;
 
-    public Task(Integer id, String name, String description, TaskStatus taskStatus,LocalDateTime startTime,Duration duration) {
+    public Task(Integer id, String name, String description, TaskStatus taskStatus, LocalDateTime startTime, Duration duration) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -24,7 +24,7 @@ public class Task {
         this.duration = duration;
     }
 
-    public Task(Integer id, String name, String description,LocalDateTime startTime,Duration duration) {
+    public Task(Integer id, String name, String description, LocalDateTime startTime, Duration duration) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -33,7 +33,7 @@ public class Task {
         this.duration = duration;
     }
 
-    public Task(String name, String description,LocalDateTime startTime,Duration duration) {
+    public Task(String name, String description, LocalDateTime startTime, Duration duration) {
         this.name = name;
         this.description = description;
         this.taskStatus = TaskStatus.NEW;
@@ -150,7 +150,7 @@ public class Task {
                 + separator
                 + (startTime != null ? startTime.toString() : "") + separator
                 + (getEndTime() != null ? getEndTime().toString() : "") + separator
-                +  (duration != null ? duration.toString() : "") ;
+                + (duration != null ? duration.toString() : "");
     }
 
     @Override
