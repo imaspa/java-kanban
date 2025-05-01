@@ -83,6 +83,7 @@ public class Epic extends Task {
                 .min(LocalDateTime::compareTo)
                 .orElse(null);
     }
+
     private LocalDateTime calcEpicTaskEndTime() {
         return subtasks.stream()
                 .map(Subtask::getEndTime)
