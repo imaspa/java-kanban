@@ -112,14 +112,14 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
         String description = data.description;
         TaskType taskType = TaskType.valueOf(data.taskType);
         TaskStatus taskStatus = TaskStatus.valueOf(data.taskStatus);
-        LocalDateTime startTime = (data.startTime == null || data.startTime.trim().isEmpty())?null:LocalDateTime.parse(data.startTime);
-        Duration duration = (data.duration == null || data.duration.trim().isEmpty())?null:Duration.parse(data.duration);
+        LocalDateTime startTime = (data.startTime == null || data.startTime.trim().isEmpty()) ? null : LocalDateTime.parse(data.startTime);
+        Duration duration = (data.duration == null || data.duration.trim().isEmpty()) ? null : Duration.parse(data.duration);
 
         switch (taskType) {
-            case TASK -> createTask(new Task(id, name, description, taskStatus,startTime,duration));
-            case EPIC -> createTask(new Epic(id, new Task(id, name, description, taskStatus,startTime,duration)));
+            case TASK -> createTask(new Task(id, name, description, taskStatus, startTime, duration));
+            case EPIC -> createTask(new Epic(id, new Task(id, name, description, taskStatus, startTime, duration)));
             case SUBTASK ->
-                    createTask(new Subtask(id, name, description, taskStatus, (Epic) findTaskById(Integer.valueOf(data.epic)),startTime,duration));
+                    createTask(new Subtask(id, name, description, taskStatus, (Epic) findTaskById(Integer.valueOf(data.epic)), startTime, duration));
         }
     }
 
