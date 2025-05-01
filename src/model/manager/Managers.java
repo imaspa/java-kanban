@@ -1,6 +1,7 @@
 package model.manager;
 
 import model.assistants.PrioritizedTasks;
+import model.httpTaskServer.HttpTaskServer;
 import model.manager.inFile.FileBackedTaskManager;
 import model.manager.inMemory.InMemoryHistoryManager;
 import model.manager.inMemory.InMemoryTaskManager;
@@ -35,5 +36,15 @@ public final class Managers {
 
     public static PrioritizedTasks getDefaultPrioritized() {
         return new PrioritizedTasks();
+    }
+
+    public static HttpServ getDefaultHttpServer() {
+        final int port = 8080;
+        final int backlog = 0;
+        return getHttpTaskServer(port, backlog, getDefault());
+    }
+
+    public static HttpServ getHttpTaskServer(int port, int backlog, TaskManager taskManager) {
+        return new HttpTaskServer(port, backlog, taskManager);
     }
 }
