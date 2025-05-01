@@ -4,7 +4,6 @@ import model.TaskType;
 import model.manager.Managers;
 import model.manager.TaskManager;
 import model.task.Epic;
-import model.task.Subtask;
 import model.task.Task;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,10 +15,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
+import static model.manager.helper.TestUtils.createTask;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class FileBackedTaskManagerWithDataTest  {
+public class FileBackedTaskManagerWithDataTest {
     private TaskManager taskManager;
     private File tempFile;
 
@@ -27,13 +28,13 @@ public class FileBackedTaskManagerWithDataTest  {
     public void beforeEach() throws IOException {
         tempFile = File.createTempFile("testFile", ".csv");
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile))) {
-            writer.write("id,TaskType,name,description,taskStatus,epic");
+            writer.write("id,TaskType,name,description,taskStatus,epic,startTime,endTime,duration");
             writer.newLine();
-            writer.write("1,TASK,задача,,NEW,");
+            writer.write("1,TASK,задача,,NEW,,2025-02-12T02:26:26,2025-02-12T06:19:11,PT3H52M45S");
             writer.newLine();
-            writer.write("2,EPIC,эпик,,IN_PROGRESS,");
+            writer.write("2,EPIC,эпик,,IN_PROGRESS,,,,,");
             writer.newLine();
-            writer.write("3,SUBTASK,подзадача,,IN_PROGRESS,2");
+            writer.write("3,SUBTASK,подзадача,,IN_PROGRESS,2,2025-04-19T20:24:47,2025-04-20T07:32:17,PT11H7M30S");
         }
         taskManager = Managers.getFile(tempFile.getAbsolutePath());
     }
@@ -43,31 +44,20 @@ public class FileBackedTaskManagerWithDataTest  {
         // Удаляем файл после теста
         if (tempFile.exists()) {
             boolean deleted = tempFile.delete();
-            if (deleted) {
-                System.out.println("Файл удален: " + tempFile.getAbsolutePath());
-            } else {
+            if (!deleted) {
                 System.err.println("Не удалось удалить файл: " + tempFile.getAbsolutePath());
             }
         }
     }
 
-    private Task createTask(TaskType taskType) {
-        return createTask(taskType, null);
-
-    }
-
-    private Task createTask(TaskType taskType, Epic epic) {
-        return switch (taskType) {
-            case TASK -> new Task(taskType.getName(), "");
-            case EPIC -> new Epic(taskType.getName(), "");
-            case SUBTASK -> new Subtask(taskType.getName(), "", epic);
-        };
-    }
-
     @Test
     void addNewTask() {
         TaskType taskType = TaskType.TASK;
-        final Task task = taskManager.createOrUpdate(createTask(taskType));
+        final Task task = assertDoesNotThrow(
+                () -> taskManager.createOrUpdate(createTask(taskType)),
+                "Не ожидалось исключения при создании/изменении задачи"
+        );
+
         final int taskId = task.getId();
         final Task savedTask = taskManager.getTaskById(taskId);
 
@@ -84,7 +74,10 @@ public class FileBackedTaskManagerWithDataTest  {
     @Test
     void addNewEpicTask() {
         TaskType taskType = TaskType.EPIC;
-        final Task task = taskManager.createOrUpdate(createTask(taskType));
+        final Task task = assertDoesNotThrow(
+                () -> taskManager.createOrUpdate(createTask(taskType)),
+                "Не ожидалось исключения при создании/изменении задачи"
+        );
         final int taskId = task.getId();
         final Task savedTask = taskManager.getTaskById(taskId);
 
@@ -100,10 +93,16 @@ public class FileBackedTaskManagerWithDataTest  {
 
     @Test
     void addNewSubtaskTask() {
-        final Task epicTask = taskManager.createOrUpdate(createTask(TaskType.EPIC));
+        final Task epicTask = assertDoesNotThrow(
+                () -> taskManager.createOrUpdate(createTask(TaskType.EPIC)),
+                "Не ожидалось исключения при создании/изменении задачи"
+        );
 
         TaskType taskType = TaskType.SUBTASK;
-        final Task task = taskManager.createOrUpdate(createTask(taskType, (Epic) epicTask));
+        final Task task = assertDoesNotThrow(
+                () -> taskManager.createOrUpdate(createTask(taskType, null, (Epic) epicTask)),
+                "Не ожидалось исключения при создании/изменении задачи"
+        );
         final int taskId = task.getId();
         final Task savedTask = taskManager.getTaskById(taskId);
 

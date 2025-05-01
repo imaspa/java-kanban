@@ -1,21 +1,26 @@
 import model.TaskStatus;
 import model.TaskType;
+import model.exception.TaskValidationException;
 import model.manager.Managers;
 import model.manager.TaskManager;
 import model.task.Epic;
 import model.task.Subtask;
 import model.task.Task;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
 
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws TaskValidationException {
         modeFile();
-      }
+    }
 
-    public static void modeFile() {
+    public static void modeFile() throws TaskValidationException {
         TaskManager taskManager = Managers.getDefault();
         showHead("Исходные данные");
         showAllTask(taskManager);
@@ -24,9 +29,10 @@ public class Main {
         var listTaskSubtask = generateSubTask(taskManager, 3, listTaskEpic.get(1));
         showHead("добавленные данные");
         showAllTask(taskManager);
+//        System.out.println(taskManager.getPrioritizedTasks());
     }
 
-    public static void modeInMemory() {
+    public static void modeInMemory() throws TaskValidationException {
         TaskManager taskManager = Managers.getDefault();
         var listTask = generateTask(taskManager, 3);
         var listTaskEpic = generateEpic(taskManager, 2);
@@ -81,7 +87,7 @@ public class Main {
         showAllTask(taskManager);
 
         showHead("Обработка ошибок. попытка удаления не существующего объекта");
-        executeToTryCatchBlock(taskManager::createOrUpdate, new Task(500, "", ""));
+//        executeToTryCatchBlock(taskManager::createOrUpdate, new Task(500, "", "",getRandomLocalDateTime(),getRandomDuration()));
     }
 
     public static void executeToTryCatchBlock(Consumer<Task> taskConsumer, Task task) {
@@ -92,15 +98,15 @@ public class Main {
         }
     }
 
-    public static ArrayList<Task> generateTask(TaskManager tm, Integer count) {
+    public static ArrayList<Task> generateTask(TaskManager tm, Integer count) throws TaskValidationException {
         ArrayList<Task> tasksList = new ArrayList<>();
         for (int i = 0; i < count; i++) {
-            tasksList.add(new Task("Наименование_%d".formatted(i + 1), "Описание_%d".formatted(i + 1)));
+            tasksList.add(new Task("Наименование_%d".formatted(i + 1), "Описание_%d".formatted(i + 1), getRandomLocalDateTime(), getRandomDuration()));
         }
         return (ArrayList<Task>) tm.createOrUpdate(tasksList);
     }
 
-    public static ArrayList<Task> generateEpic(TaskManager tm, Integer count) {
+    public static ArrayList<Task> generateEpic(TaskManager tm, Integer count) throws TaskValidationException {
         ArrayList<Task> tasksList = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             tasksList.add(new Epic("Эпик Наименование_%d".formatted(i + 1), "Описание_%d".formatted(i + 1)));
@@ -108,10 +114,10 @@ public class Main {
         return (ArrayList<Task>) tm.createOrUpdate(tasksList);
     }
 
-    public static ArrayList<Task> generateSubTask(TaskManager tm, Integer count, Task epic) {
+    public static ArrayList<Task> generateSubTask(TaskManager tm, Integer count, Task epic) throws TaskValidationException {
         ArrayList<Task> tasksList = new ArrayList<>();
         for (int i = 0; i < count; i++) {
-            tasksList.add(new Subtask("Подзадача Наименование_%d".formatted(i + 1), "Описание_%d".formatted(i + 1), (Epic) epic));
+            tasksList.add(new Subtask("Подзадача Наименование_%d".formatted(i + 1), "Описание_%d".formatted(i + 1), (Epic) epic, getRandomLocalDateTime(), getRandomDuration()));
         }
         return (ArrayList<Task>) tm.createOrUpdate(tasksList);
     }
@@ -144,4 +150,18 @@ public class Main {
         int padding = (width - title.length()) / 2;
         return " ".repeat(padding) + title + " ".repeat(padding);
     }
+
+    public static LocalDateTime getRandomLocalDateTime() {
+        long min = LocalDateTime.of(2025, 1, 1, 0, 0).toEpochSecond(ZoneOffset.UTC);
+        long max = LocalDateTime.of(2025, 4, 30, 23, 59).toEpochSecond(ZoneOffset.UTC);
+
+        long randomSeconds = ThreadLocalRandom.current().nextLong(min, max);
+        return LocalDateTime.ofEpochSecond(randomSeconds, 0, ZoneOffset.UTC);
+    }
+
+    public static Duration getRandomDuration() {
+        long seconds = ThreadLocalRandom.current().nextLong(0, Duration.ofDays(1).getSeconds());
+        return Duration.ofSeconds(seconds);
+    }
+
 }
