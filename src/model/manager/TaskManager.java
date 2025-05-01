@@ -5,6 +5,7 @@ import model.task.Task;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public interface TaskManager {
     List<Task> createOrUpdate(ArrayList<? extends Task> tasksList) throws IllegalArgumentException;
@@ -26,5 +27,9 @@ public interface TaskManager {
     Task getTaskById(Integer taskId) throws IllegalArgumentException;
 
     List<Task> getHistory();
+
+    Set<Task> getPrioritizedTasks();
+
+    void isBusyTime(Task task);
 
 }

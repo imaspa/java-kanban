@@ -2,7 +2,9 @@ package model.manager.inFile;
 
 import model.TaskStatus;
 import model.TaskType;
+import model.assistants.PrioritizedTasks;
 import model.exception.StorageException;
+import model.exception.TaskBusyTimeException;
 import model.manager.HistoryManager;
 import model.manager.TaskManager;
 import model.manager.inMemory.InMemoryTaskManager;
@@ -12,6 +14,8 @@ import model.task.Task;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
@@ -24,8 +28,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
     private final String storageHead;
     private final Character storageSeparator;
 
-    public FileBackedTaskManager(HistoryManager historyManager, Path patchStorage, String patchStorageHead, Character patchStorageSeparator) {
-        super(historyManager);
+    public FileBackedTaskManager(HistoryManager historyManager, PrioritizedTasks prioritizedTasks, Path patchStorage, String patchStorageHead, Character patchStorageSeparator) {
+        super(historyManager,prioritizedTasks);
         this.storagePatch = patchStorage;
         this.storageHead = patchStorageHead;
         this.storageSeparator = patchStorageSeparator;
@@ -84,15 +88,21 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
         String description;
         String taskStatus;
         String epic;
+        String startTime;
+        String endTime;
+        String duration;
 
         public LineCsvDto(String line, Character separator) {
-            String[] parts = line.split(separator.toString());
+            String[] parts = line.split(separator.toString(),-1);
             this.id = parts[0];
             this.taskType = parts[1];
             this.name = parts[2];
             this.description = parts[3];
             this.taskStatus = parts[4];
-            this.epic = parts.length < 6 ? null : parts[5];
+            this.epic = parts[5];
+            this.startTime = parts[6];
+            this.endTime = parts[7];
+            this.duration =  parts[8];//parts.length < 9 ? null : parts[8];
         }
     }
 
@@ -102,17 +112,21 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
         String description = data.description;
         TaskType taskType = TaskType.valueOf(data.taskType);
         TaskStatus taskStatus = TaskStatus.valueOf(data.taskStatus);
+        LocalDateTime startTime = (data.startTime == null || data.startTime.trim().isEmpty())?null:LocalDateTime.parse(data.startTime);
+        Duration duration = (data.duration == null || data.duration.trim().isEmpty())?null:Duration.parse(data.duration);
 
         switch (taskType) {
-            case TASK -> createTask(new Task(id, name, description, taskStatus));
-            case EPIC -> createTask(new Epic(id, new Task(id, name, description, taskStatus)));
+            case TASK -> createTask(new Task(id, name, description, taskStatus,startTime,duration));
+            case EPIC -> createTask(new Epic(id, new Task(id, name, description, taskStatus,startTime,duration)));
             case SUBTASK ->
-                    createTask(new Subtask(id, name, description, taskStatus, (Epic) findTaskById(Integer.valueOf(data.epic))));
+                    createTask(new Subtask(id, name, description, taskStatus, (Epic) findTaskById(Integer.valueOf(data.epic)),startTime,duration));
         }
     }
 
-    private void createTask(Task taskIn) throws IllegalArgumentException {
+    private void createTask(Task taskIn) throws IllegalArgumentException, TaskBusyTimeException {
+        isBusyTime(taskIn);
         tasks.putIfAbsent(taskIn.getTypeTask(), new ArrayList<>());
+        prioritizedTasks.addOrUpdateTask(taskIn);
         tasks.get(taskIn.getTypeTask()).add(taskIn);
         tasksTaskTypeInd.put(taskIn.getId(), taskIn.getTypeTask());
         if (taskIn.getTypeTask() == TaskType.SUBTASK) {

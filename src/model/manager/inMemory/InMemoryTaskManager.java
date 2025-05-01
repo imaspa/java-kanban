@@ -1,27 +1,34 @@
 package model.manager.inMemory;
 
 import model.TaskType;
+import model.assistants.PrioritizedTasks;
+import model.exception.TaskBusyTimeException;
 import model.manager.HistoryManager;
 import model.manager.TaskManager;
 import model.task.Epic;
 import model.task.Subtask;
 import model.task.Task;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class InMemoryTaskManager implements TaskManager {
 
     private final HistoryManager history;
+    protected final PrioritizedTasks prioritizedTasks;
+
     protected Integer sequenceId;
     protected Map<TaskType, List<Task>> tasks = new HashMap<>();
     protected Map<Integer, TaskType> tasksTaskTypeInd = new HashMap<>();
 
-    public InMemoryTaskManager(HistoryManager historyManager) {
+    public InMemoryTaskManager(HistoryManager historyManager, PrioritizedTasks prioritizedTasks) {
         sequenceId = 0;
         history = historyManager;
+        this.prioritizedTasks = prioritizedTasks;
     }
 
     @Override
@@ -34,12 +41,14 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public Task createOrUpdate(Task task) throws IllegalArgumentException {
+    public Task createOrUpdate(Task task) throws IllegalArgumentException,TaskBusyTimeException {
         Task result;
         checkDataCreateOrUpdate(task);
         if (task.getId() == null) {
             result = task.create(getGenerateSequence(), task);
+
             tasks.putIfAbsent(result.getTypeTask(), new ArrayList<>());
+            prioritizedTasks.addOrUpdateTask(result);
             tasks.get(result.getTypeTask()).add(result);
             tasksTaskTypeInd.put(result.getId(), result.getTypeTask());
         } else {
@@ -51,10 +60,11 @@ public class InMemoryTaskManager implements TaskManager {
         return result;
     }
 
-    private void checkDataCreateOrUpdate(Task task) throws IllegalArgumentException {
+    protected void checkDataCreateOrUpdate(Task task) throws IllegalArgumentException, TaskBusyTimeException {
         if (task == null) {
             throw new IllegalArgumentException("Не передан объект задачи!");
         }
+        isBusyTime(task);
         if (task.getId() == null) {
             return;
         }
@@ -73,6 +83,7 @@ public class InMemoryTaskManager implements TaskManager {
         }
         for (Task task : tasks.get(taskType)) {
             tasksTaskTypeInd.remove(task.getId());
+            prioritizedTasks.removeTask(task);
         }
         tasks.remove(taskType);
     }
@@ -81,7 +92,9 @@ public class InMemoryTaskManager implements TaskManager {
     public void removeAllTask() {
         tasksTaskTypeInd = new HashMap<>();
         tasks = new HashMap<>();
+        prioritizedTasks.removeAll();
     }
+
 
     @Override
     public void removeTask(Integer taskId) throws IllegalArgumentException {
@@ -101,6 +114,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void removeTaskById(Integer taskId) throws IllegalArgumentException {
         PatchTask patchTask = getPatchTask(taskId);
+        prioritizedTasks.removeTask(findTaskById(taskId));
         tasks.get(patchTask.getTaskType()).remove(patchTask.getIndex());
         tasksTaskTypeInd.remove(taskId);
         history.remove(taskId);
@@ -162,6 +176,7 @@ public class InMemoryTaskManager implements TaskManager {
         return history.getHistory();
     }
 
+
     public Map<Integer, TaskType> getTasksTaskTypeInd() {
         return tasksTaskTypeInd;
     }
@@ -183,4 +198,29 @@ public class InMemoryTaskManager implements TaskManager {
             return index;
         }
     }
+
+    @Override
+    public Set<Task> getPrioritizedTasks() {
+        return prioritizedTasks.getTasks();
+    }
+
+    @Override
+    public void isBusyTime(Task taskIn) throws TaskBusyTimeException {
+        LocalDateTime newStart = taskIn.getStartTime();
+        LocalDateTime newEnd = taskIn.getEndTime();
+        if (newStart == null || newEnd == null) {
+            return;
+        }
+        boolean isBusy = prioritizedTasks.getTasks().stream()
+                .filter(task -> !task.equals(taskIn))
+                .anyMatch(task ->
+                        task.getStartTime().isBefore(newEnd) &&
+                                task.getEndTime().isAfter(newStart)
+                );
+
+        if (isBusy) {
+            throw new TaskBusyTimeException("Время занято задачей (тип/id/имя/время):%s/%d/%s/%s - %s".formatted(taskIn.getTypeTask().toString(), taskIn.getId(), taskIn.getName(), taskIn.getStartTime().toString(), taskIn.getEndTime().toString()));
+        }
+    }
+
 }

@@ -3,16 +3,19 @@ package model.task;
 import model.TaskStatus;
 import model.TaskType;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+
 public class Subtask extends Task {
     private Epic epic;
 
-    public Subtask(Integer id, String name, String description, TaskStatus taskStatus, Epic epic) {
-        super(id, name, description, taskStatus);
+    public Subtask(Integer id, String name, String description, TaskStatus taskStatus, Epic epic, LocalDateTime startTime, Duration duration) {
+        super(id, name, description, taskStatus,startTime,duration);
         this.epic = epic;
     }
 
-    public Subtask(Integer id, String name, String description, Epic epic) {
-        super(id, name, description);
+    public Subtask(Integer id, String name, String description, Epic epic, LocalDateTime startTime, Duration duration) {
+        super(id, name, description,startTime,duration);
         this.epic = epic;
     }
 
@@ -21,8 +24,8 @@ public class Subtask extends Task {
         this.epic = subtask.getEpic();
     }
 
-    public Subtask(String name, String description, Epic epic) {
-        super(name, description);
+    public Subtask(String name, String description, Epic epic, LocalDateTime startTime, Duration duration) {
+        super(name, description,startTime,duration);
         this.epic = epic;
     }
 
@@ -69,6 +72,10 @@ public class Subtask extends Task {
                 + getName() + separator
                 + getDescription() + separator
                 + getTaskStatus().toString() + separator
-                + epic.getId();
+                + epic.getId() + separator
+                + (getStartTime() != null ? getStartTime().toString() : "") + separator
+                + (getEndTime() != null ? getEndTime().toString() : "") + separator
+                +  (getDuration() != null ? getDuration().toString() : "") ;
+
     }
 }

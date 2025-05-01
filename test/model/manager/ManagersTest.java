@@ -2,14 +2,17 @@ package model.manager;
 
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
+import java.io.IOException;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class ManagersTest {
 
     @Test
-    void getDefaultTest() {
-        TaskManager taskManager = Managers.getDefault();
-
+    void getDefaultTest() throws IOException {
+        File tempFile = File.createTempFile("testFile", ".csv");
+        TaskManager taskManager = Managers.getFile(tempFile.getAbsolutePath());
         assertNotNull(taskManager);
     }
 
@@ -21,9 +24,11 @@ class ManagersTest {
     }
 
     @Test
-    void shouldReturnDifferentTaskManagerInstances() {
-        TaskManager taskManager1 = Managers.getDefault();
-        TaskManager taskManager2 = Managers.getDefault();
+    void shouldReturnDifferentTaskManagerInstances() throws IOException {
+        File tempFile1 = File.createTempFile("testFile1", ".csv");
+        File tempFile2 = File.createTempFile("testFile2", ".csv");
+        TaskManager taskManager1 = Managers.getFile(tempFile1.getAbsolutePath());
+        TaskManager taskManager2 = Managers.getFile(tempFile2.getAbsolutePath());
 
         assertNotSame(taskManager1, taskManager2);
     }

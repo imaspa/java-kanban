@@ -3,13 +3,17 @@ package model.task;
 import model.TaskStatus;
 import model.TaskType;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public class Epic extends Task {
     private List<Subtask> subtasks = new ArrayList<>();
+    private LocalDateTime endTime;
 
     public Epic(Integer id, Task task) {
         super(id, task);
@@ -21,7 +25,7 @@ public class Epic extends Task {
 
     @Override
     public String toString() {
-        var subtaskStr = "\t\t\tsubtasksId: %s".formatted(subtasks.stream()
+        var subtaskStr = "\n\t\t\tsubtasksId: %s".formatted(subtasks.stream()
                 .map(subtask -> "\n\t\t\t" + subtask)
                 .collect(Collectors.joining("")));
         return "Epic{" + super.toString() + subtaskStr + "}";
@@ -33,7 +37,12 @@ public class Epic extends Task {
 
     public void removeSubtask(Integer subtaskId) {
         subtasks.removeIf(subtask -> subtask.getId().equals(subtaskId));
-        tuneStatus();
+        tuneTask();
+
+    }
+
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
     }
 
     private Subtask findSubtask(Subtask subtask) {
@@ -48,8 +57,38 @@ public class Epic extends Task {
         return TaskType.EPIC;
     }
 
-    public void tuneStatus() {
-        super.setTaskStatus(calcEpicTaskStatus());
+    @Override
+    public LocalDateTime getEndTime() {
+        return endTime;
+    }
+
+    public void tuneTask() {
+        setTaskStatus(calcEpicTaskStatus());
+        setStartTime(calcEpicTaskStartTime());
+        setEndTime(calcEpicTaskEndTime());
+        setDuration(calcEpicTaskDuration());
+    }
+
+    private Duration calcEpicTaskDuration() {
+        if (Objects.isNull(getStartTime()) || Objects.isNull(getEndTime())) {
+            return null;
+        }
+        return Duration.between(getStartTime(), getEndTime());
+    }
+
+    private LocalDateTime calcEpicTaskStartTime() {
+        return subtasks.stream()
+                .map(Subtask::getStartTime)
+                .filter(Objects::nonNull)
+                .min(LocalDateTime::compareTo)
+                .orElse(null);
+    }
+    private LocalDateTime calcEpicTaskEndTime() {
+        return subtasks.stream()
+                .map(Subtask::getEndTime)
+                .filter(Objects::nonNull)
+                .max(LocalDateTime::compareTo)
+                .orElse(null);
     }
 
     private TaskStatus calcEpicTaskStatus() {
@@ -79,6 +118,6 @@ public class Epic extends Task {
         } else {
             subtasks.add(subtask);
         }
-        tuneStatus();
+        tuneTask();
     }
 }

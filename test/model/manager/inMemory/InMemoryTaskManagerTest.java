@@ -2,18 +2,26 @@ package model.manager.inMemory;
 
 import model.TaskStatus;
 import model.TaskType;
+import model.exception.TaskBusyTimeException;
 import model.manager.Managers;
 import model.manager.TaskManager;
 import model.task.Epic;
-import model.task.Subtask;
 import model.task.Task;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.Iterator;
 import java.util.List;
 
+import static model.manager.helper.TestUtils.createTask;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class InMemoryTaskManagerTest {
@@ -24,18 +32,6 @@ class InMemoryTaskManagerTest {
         taskManager = Managers.getMemory();
     }
 
-    private Task createTask(TaskType taskType) {
-        return createTask(taskType, null);
-
-    }
-
-    private Task createTask(TaskType taskType, Epic epic) {
-        return switch (taskType) {
-            case TASK -> new Task(taskType.getName(), "");
-            case EPIC -> new Epic(taskType.getName(), "");
-            case SUBTASK -> new Subtask(taskType.getName(), "", epic);
-        };
-    }
 
     @Test
     void addNewTask() {
@@ -71,12 +67,13 @@ class InMemoryTaskManagerTest {
         assertEquals(task, tasks.get(0), "Задачи не совпадают.");
     }
 
+
     @Test
     void addNewSubtaskTask() {
         final Task epicTask = taskManager.createOrUpdate(createTask(TaskType.EPIC));
 
         TaskType taskType = TaskType.SUBTASK;
-        final Task task = taskManager.createOrUpdate(createTask(taskType, (Epic) epicTask));
+        final Task task = taskManager.createOrUpdate(createTask(taskType, null, (Epic) epicTask));
         final int taskId = task.getId();
         final Task savedTask = taskManager.getTaskById(taskId);
 
@@ -95,7 +92,7 @@ class InMemoryTaskManagerTest {
         final Task epicTask = taskManager.createOrUpdate(createTask(TaskType.EPIC));
 
         TaskType taskType = TaskType.SUBTASK;
-        final Task task = taskManager.createOrUpdate(createTask(taskType, (Epic) epicTask));
+        final Task task = taskManager.createOrUpdate(createTask(taskType, null, (Epic) epicTask));
         final int taskId = task.getId();
         final Task savedTask = taskManager.getTaskById(taskId);
 
@@ -145,11 +142,70 @@ class InMemoryTaskManagerTest {
     void shouldAddAndFindDifferentTaskTypes() {
         final Task task = taskManager.createOrUpdate(createTask(TaskType.TASK));
         final Task epic = taskManager.createOrUpdate(createTask(TaskType.EPIC));
-        final Task subtask = taskManager.createOrUpdate(createTask(TaskType.EPIC, (Epic) epic));
+        final Task subtask = taskManager.createOrUpdate(createTask(TaskType.EPIC, null,(Epic) epic));
 
         assertEquals(task, taskManager.getTaskById(task.getId()));
         assertEquals(epic, taskManager.getTaskById(epic.getId()));
         assertEquals(subtask, taskManager.getTaskById(subtask.getId()));
+    }
+
+    @Test
+    void isBusyTime_shouldThrowTaskBusyTimeExceptionWhenTimeOverlaps() {
+        LocalDateTime currentTime = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS);
+
+        Task task1 = createTask(TaskType.TASK);
+        task1.setStartTime(currentTime);
+        task1.setDuration(Duration.ofMinutes(61));
+
+        Task task2 = createTask(TaskType.TASK);
+        task2.setStartTime(currentTime.plusMinutes(60));
+        task2.setDuration(Duration.ofMinutes(61));
+
+        assertDoesNotThrow(() -> taskManager.createOrUpdate(task1));
+
+        TaskBusyTimeException exception = assertThrows(
+                TaskBusyTimeException.class,
+                () -> taskManager.createOrUpdate(task2),
+                "Ожидалось, что пересечение задач по времени вызовет исключение"
+        );
+       assertNotNull(exception.getMessage());
+    }
+
+    @Test
+    void shouldPrioritizedTasks() {
+        LocalDateTime currentTime = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS);
+        var prioritizedTasks = taskManager.getPrioritizedTasks();
+
+        Task task1 = createTask(TaskType.TASK);
+        task1.setStartTime(currentTime);
+        task1.setDuration(Duration.ofMinutes(50));
+
+        Task task2 = createTask(TaskType.TASK);
+        task2.setStartTime(currentTime.plusMinutes(60));
+        task2.setDuration(Duration.ofMinutes(50));
+
+        task1 = taskManager.createOrUpdate(task1);
+        task2 = taskManager.createOrUpdate(task2);
+
+        assertEquals(2, prioritizedTasks.size());
+        Iterator<Task> iterator = prioritizedTasks.iterator();
+        assertEquals(task1, iterator.next());
+        assertEquals(task2, iterator.next());
+        assertFalse(iterator.hasNext());
+
+        Task task3 = createTask(TaskType.TASK);
+        task3.setStartTime(currentTime.minusMinutes(60));
+        task3.setDuration(Duration.ofMinutes(50));
+        task3 = taskManager.createOrUpdate(task3);
+
+        assertEquals(3, prioritizedTasks.size());
+        iterator = prioritizedTasks.iterator();
+        assertEquals(task3, iterator.next());
+        assertEquals(task1, iterator.next());
+        assertEquals(task2, iterator.next());
+        assertFalse(iterator.hasNext());
+
+
     }
 
 }
