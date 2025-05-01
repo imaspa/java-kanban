@@ -10,12 +10,12 @@ public class Subtask extends Task {
     private Epic epic;
 
     public Subtask(Integer id, String name, String description, TaskStatus taskStatus, Epic epic, LocalDateTime startTime, Duration duration) {
-        super(id, name, description, taskStatus,startTime,duration);
+        super(id, name, description, taskStatus, startTime, duration);
         this.epic = epic;
     }
 
     public Subtask(Integer id, String name, String description, Epic epic, LocalDateTime startTime, Duration duration) {
-        super(id, name, description,startTime,duration);
+        super(id, name, description, startTime, duration);
         this.epic = epic;
     }
 
@@ -25,7 +25,7 @@ public class Subtask extends Task {
     }
 
     public Subtask(String name, String description, Epic epic, LocalDateTime startTime, Duration duration) {
-        super(name, description,startTime,duration);
+        super(name, description, startTime, duration);
         this.epic = epic;
     }
 
@@ -75,7 +75,6 @@ public class Subtask extends Task {
                 + epic.getId() + separator
                 + (getStartTime() != null ? getStartTime().toString() : "") + separator
                 + (getEndTime() != null ? getEndTime().toString() : "") + separator
-                +  (getDuration() != null ? getDuration().toString() : "") ;
-
+                + (getDuration() != null ? getDuration().toString() : "");
     }
 }
