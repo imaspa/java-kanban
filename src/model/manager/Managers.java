@@ -44,6 +44,12 @@ public final class Managers {
         return getHttpTaskServer(port, backlog, getDefault());
     }
 
+    public static HttpServ getHttpTaskServer(TaskManager taskManager) {
+        final int port = 8080;
+        final int backlog = 0;
+        return getHttpTaskServer(port, backlog, taskManager);
+    }
+
     public static HttpServ getHttpTaskServer(int port, int backlog, TaskManager taskManager) {
         return new HttpTaskServer(port, backlog, taskManager);
     }

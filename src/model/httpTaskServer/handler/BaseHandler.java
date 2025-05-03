@@ -17,6 +17,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
+import static java.net.HttpURLConnection.HTTP_OK;
+
 public class BaseHandler {
     public final Gson gson;
     final TaskManager taskManager;
@@ -39,7 +41,11 @@ public class BaseHandler {
         return path.split("/");
     }
 
-    protected Integer getId(String[] patch, int index) {
+    protected Integer extractId(String path, int index) {
+        return extractId((path.split("/")), index);
+    }
+
+    protected Integer extractId(String[] patch, int index) {
         if ((patch.length <= index) || (!patch[index].matches("\\d+"))) {
             return null;
         }
@@ -59,12 +65,17 @@ public class BaseHandler {
     }
 
     protected void sendText(final HttpExchange exchange, final String text) throws IOException {
+        sendText(exchange,text,HTTP_OK);
+    }
+
+    protected void sendText(final HttpExchange exchange, final String text,int statusCode) throws IOException {
         exchange.getResponseHeaders().add("Content-Type", "application/json;charset=utf-8");
-        sendResponse(exchange, HttpURLConnection.HTTP_OK, text);
+        sendResponse(exchange, statusCode, text);
     }
 
     protected void sendResponse(HttpExchange exchange, int statusCode) throws IOException {
         exchange.sendResponseHeaders(statusCode, 0);
+        exchange.getResponseBody().close();
     }
 
     protected void sendResponse(HttpExchange exchange, int statusCode, String text) throws IOException {

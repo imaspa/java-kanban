@@ -12,17 +12,17 @@ public class PrioritizedHandler extends BaseMethodHandle {
     }
 
     @Override
-    void getTask(HttpExchange exchange, String[] splitPath) throws IOException {
+    void getTask(HttpExchange exchange, String path) throws IOException {
         sendText(exchange, gson.toJson(taskManager.getPrioritizedTasks()));
     }
 
     @Override
-    void postTask(HttpExchange exchange, String[] splitPath) throws IOException {
+    void postTask(HttpExchange exchange, String path) throws IOException {
         sendResponse(exchange, HttpURLConnection.HTTP_BAD_METHOD);
     }
 
     @Override
-    void deleteTask(HttpExchange exchange, String[] splitPath) throws IOException {
+    void deleteTask(HttpExchange exchange, String path) throws IOException {
         sendResponse(exchange, HttpURLConnection.HTTP_BAD_METHOD);
     }
 }

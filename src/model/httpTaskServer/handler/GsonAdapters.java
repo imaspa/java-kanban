@@ -29,7 +29,7 @@ public final class GsonAdapters {
     private GsonAdapters() {
     }
 
-    static class DurationTypeAdapter implements JsonSerializer<Duration>, JsonDeserializer<Duration> {
+    public static class DurationTypeAdapter implements JsonSerializer<Duration>, JsonDeserializer<Duration> {
         @Override
         public JsonElement serialize(final Duration src, final Type typeOfSrc, final JsonSerializationContext context) {
             if (src == null) {
@@ -115,7 +115,6 @@ public final class GsonAdapters {
         public JsonElement serialize(Epic src, Type typeOfSrc, JsonSerializationContext context) {
             JsonObject jsonObject = new JsonObject();
             jsonObject.addProperty("id", src.getId());
-            jsonObject.addProperty("id", src.getId());
             jsonObject.addProperty("name", src.getName());
             jsonObject.addProperty("description", src.getDescription());
             jsonObject.addProperty("taskStatus", src.getTaskStatus().toString());
@@ -123,7 +122,6 @@ public final class GsonAdapters {
             jsonObject.add("duration", context.serialize(src.getDuration()));
             jsonObject.add("endTime", context.serialize(src.getEndTime()));
 
-            // Сериализация списка подзадач (только их ID, чтобы избежать циклических зависимостей)
             JsonArray subtasksArray = new JsonArray();
             for (Subtask subtask : src.getSubtasks()) {
                 subtasksArray.add(subtask.getId());

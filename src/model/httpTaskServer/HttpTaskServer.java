@@ -10,7 +10,10 @@ import model.manager.HttpServ;
 import model.manager.TaskManager;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
+
+import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
 public class HttpTaskServer implements HttpServ {
     private static final String TASKS_PATH = "/tasks";
@@ -27,7 +30,6 @@ public class HttpTaskServer implements HttpServ {
         this.taskManager = taskManager;
         try {
             this.httpServer = initServer(port, backlog);
-//            this.httpServer.start();
         } catch (IOException e) {
             throw new RuntimeException("Ошибка инициализации HTTP сервера", e);
         }
@@ -37,7 +39,21 @@ public class HttpTaskServer implements HttpServ {
     public HttpServer initServer(int port, int backlog) throws IOException {
         HttpServer server = HttpServer.create(new InetSocketAddress(port), backlog);
         registerHandlers(server);
+        server.createContext("/", exchange -> {
+            if (!isSupportedPath(exchange.getRequestURI().getPath())) {
+                exchange.sendResponseHeaders(HTTP_NOT_FOUND, 0);
+                exchange.getResponseBody().close();
+            }
+        });
         return server;
+    }
+
+    private boolean isSupportedPath(String path) {
+        return path.equals(TASKS_PATH) ||
+                path.equals(SUBTASKS_PATH) ||
+                path.equals(EPICS_PATH) ||
+                path.equals(HISTORY_PATH) ||
+                path.equals(PRIORITIZED_PATH);
     }
 
     private void registerHandlers(HttpServer server) {

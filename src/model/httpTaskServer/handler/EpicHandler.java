@@ -10,6 +10,7 @@ import model.task.Task;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.util.regex.Pattern;
 
 import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.net.HttpURLConnection.HTTP_NOT_ACCEPTABLE;
@@ -17,65 +18,80 @@ import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
 
 public class EpicHandler extends BaseMethodHandle {
+    private static final Pattern ALL_PATTERN = Pattern.compile("^/epics$");
+    private static final Pattern BY_ID_PATTERN = Pattern.compile("^/epics/\\d+$");
+    private static final Pattern EPIC_SUBTASKS_PATTERN = Pattern.compile("^/epics/\\d+/subtasks$");
 
     public EpicHandler(TaskManager taskManager) {
         super(taskManager);
     }
 
     @Override
-    void getTask(HttpExchange exchange, String[] splitPath) throws IOException {
-        Epic content = null;
-        Integer idTask = getId(splitPath, 2);
-        String keyNode = getKeyNode(splitPath, 3);
-        if (idTask != null) {
-            try {
-                content = (Epic) taskManager.getTaskById(idTask);
-            } catch (TaskNotFound e) {
-                sendResponse(exchange, HTTP_NOT_FOUND);
-                return;
-            }
-        }
+    void getTask(HttpExchange exchange, String path) throws IOException {
+        boolean isAllEpics = ALL_PATTERN.matcher(path).matches();
+        boolean isEpicById = BY_ID_PATTERN.matcher(path).matches();
+        boolean isEpicSubtasks = EPIC_SUBTASKS_PATTERN.matcher(path).matches();
 
-        if (keyNode == null && idTask == null) {
-            sendText(exchange, gson.toJson(taskManager.getTasks(TaskType.EPIC)));
-        } else if (keyNode != null) {
-            if (content != null && content.getSubtasks().isEmpty()) {
-                sendResponse(exchange, HTTP_NOT_FOUND);
-            } else {
-                sendText(exchange, gson.toJson(content.getSubtasks()));
-            }
+        if (true == isAllEpics) {
+            handleAllEpicsRequest(exchange);
+        } else if (true == isEpicById) {
+            handleEpicByIdRequest(exchange, extractId(path));
+        } else if (true == isEpicSubtasks) {
+            handleEpicSubtasksRequest(exchange, extractId(path));
         } else {
-            sendText(exchange, gson.toJson(content));
+            sendResponse(exchange, HTTP_NOT_FOUND);
         }
     }
 
+    private void handleAllEpicsRequest(HttpExchange exchange) throws IOException {
+        sendText(exchange, gson.toJson(taskManager.getTasks(TaskType.EPIC)));
+    }
 
-    @Override
-    void postTask(HttpExchange exchange, String[] splitPath) throws IOException {
-        Task task = readerFromJson(exchange);
+    private void handleEpicByIdRequest(HttpExchange exchange, Integer idTask) throws IOException {
         try {
-            taskManager.checkDataCreateOrUpdate(task);
-        } catch (TaskValidationException e) {
-            sendResponse(exchange, HTTP_NOT_ACCEPTABLE);
+            Epic content = (Epic) taskManager.getTaskById(idTask);
+            sendText(exchange, gson.toJson(content));
+        } catch (TaskNotFound e) {
+            sendResponse(exchange, HTTP_NOT_FOUND);
             return;
         }
+    }
+
+    private void handleEpicSubtasksRequest(HttpExchange exchange, Integer idTask) throws IOException {
+        try {
+            Epic content = (Epic) taskManager.getTaskById(idTask);
+            sendText(exchange, gson.toJson(content.getSubtasks()));
+        } catch (TaskNotFound e) {
+            sendResponse(exchange, HTTP_NOT_FOUND);
+            return;
+        }
+    }
+
+    @Override
+    void postTask(HttpExchange exchange, String path) throws IOException {
+        Task task = readerFromJson(exchange);
         try {
             taskManager.createOrUpdate(task);
         } catch (TaskValidationException | TaskNotFound e) {
             sendResponse(exchange, HTTP_NOT_ACCEPTABLE);
+            return;
         }
         sendResponse(exchange, HTTP_CREATED);
     }
 
     @Override
-    void deleteTask(HttpExchange exchange, String[] splitPath) throws IOException {
-        Integer idTask = getId(splitPath, 2);
+    void deleteTask(HttpExchange exchange, String path) throws IOException {
+        Integer idTask = extractId(path);
         try {
             taskManager.removeTaskById(idTask);
         } catch (TaskNotFound e) {
             sendResponse(exchange, HTTP_NOT_FOUND);
+            return;
         }
         sendResponse(exchange, HttpURLConnection.HTTP_OK);
     }
 
+    protected Integer extractId(String path) {
+        return extractId(path, 2);
+    }
 }
