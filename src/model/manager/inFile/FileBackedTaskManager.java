@@ -4,6 +4,7 @@ import model.TaskStatus;
 import model.TaskType;
 import model.assistants.PrioritizedTasks;
 import model.exception.StorageException;
+import model.exception.TaskNotFound;
 import model.exception.TaskValidationException;
 import model.manager.HistoryManager;
 import model.manager.TaskManager;
@@ -71,7 +72,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
             if ("TASK".equals(entity.taskType) || "EPIC".equals(entity.taskType)) {
                 try {
                     parseTaskFromCsv(entity);
-                } catch (TaskValidationException e) {
+                } catch (TaskValidationException | TaskNotFound e) {
                     System.err.println("Не удалось создать задачу: " + e.getMessage());
                 }
             }
@@ -80,7 +81,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
             if ("SUBTASK".equals(entity.taskType)) {
                 try {
                     parseTaskFromCsv(entity);
-                } catch (TaskValidationException e) {
+                } catch (TaskValidationException | TaskNotFound e) {
                     System.err.println("Не удалось создать задачу: " + e.getMessage());
                 }
             }
@@ -93,7 +94,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
         this.sequenceId = maxId;
     }
 
-    private void parseTaskFromCsv(LineCsvDto data) throws TaskValidationException {
+    private void parseTaskFromCsv(LineCsvDto data) throws TaskValidationException, TaskNotFound {
         Integer id = Integer.valueOf(data.id);
         String name = data.name;
         String description = data.description;
@@ -124,7 +125,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
     }
 
     @Override
-    public Task createOrUpdate(Task task) throws TaskValidationException {
+    public Task createOrUpdate(Task task) throws TaskValidationException, TaskNotFound {
         var result = super.createOrUpdate(task);
         saveToCsvFile(result);
         return result;

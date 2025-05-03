@@ -5,6 +5,7 @@ import model.TaskType;
 import model.exception.TaskNotFound;
 import model.exception.TaskValidationException;
 import model.manager.TaskManager;
+import model.task.Epic;
 import model.task.Task;
 
 import java.io.IOException;
@@ -15,29 +16,39 @@ import static java.net.HttpURLConnection.HTTP_NOT_ACCEPTABLE;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
 
-public class TaskHandler extends BaseMethodHandle {
+public class EpicHandler extends BaseMethodHandle {
 
-    public TaskHandler(TaskManager taskManager) {
+    public EpicHandler(TaskManager taskManager) {
         super(taskManager);
     }
 
     @Override
     void getTask(HttpExchange exchange, String[] splitPath) throws IOException {
+        Epic content = null;
         Integer idTask = getId(splitPath, 2);
-        if (idTask == null) {
-            sendText(exchange, gson.toJson(taskManager.getTasks(TaskType.TASK)));
-        } else {
-            Task content;
+        String keyNode = getKeyNode(splitPath, 3);
+        if (idTask != null) {
             try {
-                content = taskManager.getTaskById(idTask);
+                content = (Epic) taskManager.getTaskById(idTask);
             } catch (TaskNotFound e) {
                 sendResponse(exchange, HTTP_NOT_FOUND);
                 return;
             }
-            sendText(exchange, gson.toJson(content));
         }
 
+        if (keyNode == null && idTask == null) {
+            sendText(exchange, gson.toJson(taskManager.getTasks(TaskType.EPIC)));
+        } else if (keyNode != null) {
+            if (content != null && content.getSubtasks().isEmpty()) {
+                sendResponse(exchange, HTTP_NOT_FOUND);
+            } else {
+                sendText(exchange, gson.toJson(content.getSubtasks()));
+            }
+        } else {
+            sendText(exchange, gson.toJson(content));
+        }
     }
+
 
     @Override
     void postTask(HttpExchange exchange, String[] splitPath) throws IOException {

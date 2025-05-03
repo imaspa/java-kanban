@@ -1,7 +1,10 @@
 package model.httpTaskServer;
 
 import com.sun.net.httpserver.HttpServer;
-import model.httpTaskServer.handler.BaseHandler;
+import model.httpTaskServer.handler.EpicHandler;
+import model.httpTaskServer.handler.HistoryHandler;
+import model.httpTaskServer.handler.PrioritizedHandler;
+import model.httpTaskServer.handler.SubtaskHandler;
 import model.httpTaskServer.handler.TaskHandler;
 import model.manager.HttpServ;
 import model.manager.TaskManager;
@@ -9,7 +12,7 @@ import model.manager.TaskManager;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
-public class HttpTaskServer  implements HttpServ {
+public class HttpTaskServer implements HttpServ {
     private static final String TASKS_PATH = "/tasks";
     private static final String SUBTASKS_PATH = "/subtasks";
     private static final String EPICS_PATH = "/epics";
@@ -24,7 +27,7 @@ public class HttpTaskServer  implements HttpServ {
         this.taskManager = taskManager;
         try {
             this.httpServer = initServer(port, backlog);
-            this.httpServer.start();
+//            this.httpServer.start();
         } catch (IOException e) {
             throw new RuntimeException("Ошибка инициализации HTTP сервера", e);
         }
@@ -39,10 +42,10 @@ public class HttpTaskServer  implements HttpServ {
 
     private void registerHandlers(HttpServer server) {
         server.createContext(TASKS_PATH, new TaskHandler(taskManager));
-//        server.createContext(SUBTASKS_PATH, new SubtasksHandler(taskManager));
-//        server.createContext(EPICS_PATH, new EpicsHandler(taskManager));
-//        server.createContext(HISTORY_PATH, new HistoryHandler(taskManager));
-//        server.createContext(PRIORITIZED_PATH, new PriorityHandler(taskManager));
+        server.createContext(SUBTASKS_PATH, new SubtaskHandler(taskManager));
+        server.createContext(EPICS_PATH, new EpicHandler(taskManager));
+        server.createContext(HISTORY_PATH, new HistoryHandler(taskManager));
+        server.createContext(PRIORITIZED_PATH, new PrioritizedHandler(taskManager));
     }
 
     @Override

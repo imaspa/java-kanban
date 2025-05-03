@@ -1,19 +1,53 @@
 package model.httpTaskServer.handler;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.stream.JsonReader;
 import com.sun.net.httpserver.HttpExchange;
 import model.manager.TaskManager;
+import model.task.Epic;
+import model.task.Subtask;
+import model.task.Task;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.nio.charset.Charset;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.LocalDateTime;
 
 public class BaseHandler {
-    private static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
-    private final TaskManager taskManager;
+    public final Gson gson;
+    final TaskManager taskManager;
 
     public BaseHandler(TaskManager taskManager) {
+        gson = new GsonBuilder()
+                .registerTypeAdapter(Duration.class, new GsonAdapters.DurationTypeAdapter())
+                .registerTypeAdapter(LocalDateTime.class, new GsonAdapters.LocalDateTimeAdapter())
+                .registerTypeAdapter(Subtask.class, new GsonAdapters.SubtaskAdapter())
+                .registerTypeAdapter(Epic.class, new GsonAdapters.EpicAdapter())
+                .serializeNulls()
+                .setPrettyPrinting()
+                .create();
         this.taskManager = taskManager;
+    }
+
+    protected String[] splitPath(HttpExchange exchange) {
+        URI uri = exchange.getRequestURI();
+        String path = uri.getPath();
+        return path.split("/");
+    }
+
+    protected Integer getId(String[] patch, int index) {
+        if ((patch.length <= index) || (!patch[index].matches("\\d+"))) {
+            return null;
+        }
+        return Integer.parseInt(patch[index]);
+    }
+
+    protected String getKeyNode(String[] patch, int index) {
+        return (patch.length <= index) ? null : patch[index];
     }
 
     protected void handleUnsupportedMethod(HttpExchange exchange) throws IOException {
@@ -24,9 +58,32 @@ public class BaseHandler {
         sendResponse(exchange, HttpURLConnection.HTTP_INTERNAL_ERROR);
     }
 
-    protected void sendResponse(HttpExchange exchange, int statusCode) throws IOException {
-        exchange.sendResponseHeaders(statusCode,0);
-        exchange.close();
+    protected void sendText(final HttpExchange exchange, final String text) throws IOException {
+        exchange.getResponseHeaders().add("Content-Type", "application/json;charset=utf-8");
+        sendResponse(exchange, HttpURLConnection.HTTP_OK, text);
+    }
 
+    protected void sendResponse(HttpExchange exchange, int statusCode) throws IOException {
+        exchange.sendResponseHeaders(statusCode, 0);
+    }
+
+    protected void sendResponse(HttpExchange exchange, int statusCode, String text) throws IOException {
+        byte[] response = text.getBytes(StandardCharsets.UTF_8);
+        exchange.sendResponseHeaders(statusCode, response.length);
+        try (var os = exchange.getResponseBody()) {
+            os.write(response);
+        }
+    }
+
+    protected Task readerFromJson(final HttpExchange exchange) throws IOException {
+        try (JsonReader reader = new JsonReader(new InputStreamReader(exchange.getRequestBody()))) {
+            return switch (splitPath(exchange)[1]) {
+                case "tasks" -> gson.fromJson(reader, Task.class);
+                case "subtasks" -> gson.fromJson(reader, Subtask.class);
+                case "epics" -> gson.fromJson(reader, Epic.class);
+
+                default -> throw new IllegalStateException("Unexpected value: " + splitPath(exchange)[1]);
+            };
+        }
     }
 }

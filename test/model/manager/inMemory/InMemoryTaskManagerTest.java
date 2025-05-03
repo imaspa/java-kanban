@@ -38,11 +38,14 @@ class InMemoryTaskManagerTest {
         TaskType taskType = TaskType.TASK;
         final Task task = assertDoesNotThrow(
                 () -> taskManager.createOrUpdate(createTask(taskType)),
-                "Не ожидалось исключения при создании/изменении задачи"
+                "Не ожидалось исключения"
         );
 
         final int taskId = task.getId();
-        final Task savedTask = taskManager.getTaskById(taskId);
+        final Task savedTask = assertDoesNotThrow(
+                () -> taskManager.getTaskById(taskId),
+                "Не ожидалось исключения"
+        );
 
         assertNotNull(savedTask, "Задача не найдена.");
         assertEquals(task, savedTask, "Задачи не совпадают.");
@@ -59,11 +62,14 @@ class InMemoryTaskManagerTest {
         TaskType taskType = TaskType.EPIC;
         final Task task = assertDoesNotThrow(
                 () -> taskManager.createOrUpdate(createTask(taskType)),
-                "Не ожидалось исключения при создании/изменении задачи"
+                "Не ожидалось исключения"
         );
 
         final int taskId = task.getId();
-        final Task savedTask = taskManager.getTaskById(taskId);
+        final Task savedTask = assertDoesNotThrow(
+                () -> taskManager.getTaskById(taskId),
+                "Не ожидалось исключения"
+        );
 
         assertNotNull(savedTask, "Задача не найдена.");
         assertEquals(task, savedTask, "Задачи не совпадают.");
@@ -80,17 +86,20 @@ class InMemoryTaskManagerTest {
     void addNewSubtaskTask() {
         final Task epicTask = assertDoesNotThrow(
                 () -> taskManager.createOrUpdate(createTask(TaskType.EPIC)),
-                "Не ожидалось исключения при создании/изменении задачи"
+                "Не ожидалось исключения"
         );
 
         TaskType taskType = TaskType.SUBTASK;
         //final Task task = taskManager.createOrUpdate(createTask(taskType, null, (Epic) epicTask));
         final Task task = assertDoesNotThrow(
                 () -> taskManager.createOrUpdate(createTask(taskType, null, (Epic) epicTask)),
-                "Не ожидалось исключения при создании/изменении задачи"
+                "Не ожидалось исключения"
         );
         final int taskId = task.getId();
-        final Task savedTask = taskManager.getTaskById(taskId);
+        final Task savedTask = assertDoesNotThrow(
+                () -> taskManager.getTaskById(taskId),
+                "Не ожидалось исключения"
+        );
 
         assertNotNull(savedTask, "Задача не найдена.");
         assertEquals(task, savedTask, "Задачи не совпадают.");
@@ -106,16 +115,19 @@ class InMemoryTaskManagerTest {
     void addNewSubtaskTask1() {
         final Task epicTask = assertDoesNotThrow(
                 () -> taskManager.createOrUpdate(createTask(TaskType.EPIC)),
-                "Не ожидалось исключения при создании/изменении задачи"
+                "Не ожидалось исключения"
         );
 
         TaskType taskType = TaskType.SUBTASK;
         final Task task = assertDoesNotThrow(
                 () -> taskManager.createOrUpdate(createTask(taskType, null, (Epic) epicTask)),
-                "Не ожидалось исключения при создании/изменении задачи"
+                "Не ожидалось исключения"
         );
         final int taskId = task.getId();
-        final Task savedTask = taskManager.getTaskById(taskId);
+        final Task savedTask = assertDoesNotThrow(
+                () -> taskManager.getTaskById(taskId),
+                "Не ожидалось исключения"
+        );
 
         assertNotNull(savedTask, "Задача не найдена.");
         assertEquals(task, savedTask, "Задачи не совпадают.");
@@ -132,9 +144,13 @@ class InMemoryTaskManagerTest {
         TaskType taskType = TaskType.TASK;
         final Task task = assertDoesNotThrow(
                 () -> taskManager.createOrUpdate(createTask(taskType)),
-                "Не ожидалось исключения при создании/изменении задачи"
+                "Не ожидалось исключения"
         );
-        taskManager.getTaskById(task.getId());
+        
+        assertDoesNotThrow(
+                () -> taskManager.getTaskById(task.getId()),
+                "Не ожидалось исключения"
+        );        
 
         List<Task> history = taskManager.getHistory();
         assertNotNull(history, "История не должна быть пустой (null)");
@@ -147,15 +163,19 @@ class InMemoryTaskManagerTest {
         TaskType taskType = TaskType.TASK;
         final Task task = assertDoesNotThrow(
                 () -> taskManager.createOrUpdate(createTask(taskType)),
-                "Не ожидалось исключения при создании/изменении задачи"
+                "Не ожидалось исключения"
         );
         task.setTaskStatus(TaskStatus.DONE);
         assertDoesNotThrow(
                 () -> taskManager.createOrUpdate(createTask(taskType)),
-                "Не ожидалось исключения при создании/изменении задачи"
+                "Не ожидалось исключения"
         );
 
-        Task savedTask = taskManager.getTaskById(task.getId());
+        
+        final Task savedTask = assertDoesNotThrow(
+                () -> taskManager.getTaskById(task.getId()),
+                "Не ожидалось исключения"
+        );
         assertNotNull(savedTask, "Задача не найдена");
         assertEquals(TaskStatus.DONE, savedTask.getTaskStatus(), "Статус задачи не обновился");
     }
@@ -165,9 +185,13 @@ class InMemoryTaskManagerTest {
         TaskType taskType = TaskType.TASK;
         final Task task = assertDoesNotThrow(
                 () -> taskManager.createOrUpdate(createTask(taskType)),
-                "Не ожидалось исключения при создании/изменении задачи"
+                "Не ожидалось исключения"
         );
-        taskManager.removeTaskById(task.getId());
+        
+                assertDoesNotThrow(
+                () -> taskManager.removeTaskById(task.getId()),
+                "Не ожидалось исключения"
+        );        
         assertTrue(taskManager.getTasks(taskType).isEmpty(), "Список задач должен быть пустым");
     }
 
@@ -175,20 +199,30 @@ class InMemoryTaskManagerTest {
     void shouldAddAndFindDifferentTaskTypes() {
         final Task task = assertDoesNotThrow(
                 () -> taskManager.createOrUpdate(createTask(TaskType.TASK)),
-                "Не ожидалось исключения при создании/изменении задачи"
+                "Не ожидалось исключения"
         );
         final Task epic = assertDoesNotThrow(
                 () -> taskManager.createOrUpdate(createTask(TaskType.EPIC)),
-                "Не ожидалось исключения при создании/изменении задачи"
+                "Не ожидалось исключения"
         );
         final Task subtask = assertDoesNotThrow(
                 () -> taskManager.createOrUpdate(createTask(TaskType.EPIC, null, (Epic) epic)),
-                "Не ожидалось исключения при создании/изменении задачи"
+                "Не ожидалось исключения"
         );
 
-        assertEquals(task, taskManager.getTaskById(task.getId()));
-        assertEquals(epic, taskManager.getTaskById(epic.getId()));
-        assertEquals(subtask, taskManager.getTaskById(subtask.getId()));
+        assertEquals(task,  assertDoesNotThrow(
+                () -> taskManager.getTaskById(task.getId()),
+                "Не ожидалось исключения"
+        ));       
+        assertEquals(epic,  assertDoesNotThrow(
+                () -> taskManager.getTaskById(epic.getId()),
+                "Не ожидалось исключения"
+        ));        
+        assertEquals(subtask,  assertDoesNotThrow(
+                () -> taskManager.getTaskById(subtask.getId()),
+                "Не ожидалось исключения"
+        ));
+
     }
 
     @Test

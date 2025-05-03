@@ -2,6 +2,7 @@ package model.task;
 
 import model.TaskStatus;
 import model.TaskType;
+import model.exception.TaskValidationException;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -45,6 +46,10 @@ public class Task {
         this.name = name;
         this.description = description;
         this.taskStatus = TaskStatus.NEW;
+    }
+
+    public Task(Integer id) {
+        this.id = id;
     }
 
     public Task(Task task) {
@@ -129,9 +134,9 @@ public class Task {
         return new Task(id, task);
     }
 
-    public Task update(Task task) {
+    public Task update(Task task) throws TaskValidationException {
         if (task == null) {
-            throw new IllegalArgumentException("Переданный объект не может быть null");
+            throw new TaskValidationException("Переданный объект не может быть null");
         }
         this.name = task.getName();
         this.description = task.getName();

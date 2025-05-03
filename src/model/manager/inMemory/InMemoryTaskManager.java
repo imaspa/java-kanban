@@ -2,6 +2,7 @@ package model.manager.inMemory;
 
 import model.TaskType;
 import model.assistants.PrioritizedTasks;
+import model.exception.TaskNotFound;
 import model.exception.TaskValidationException;
 import model.manager.HistoryManager;
 import model.manager.TaskManager;
@@ -31,7 +32,8 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public List<Task> createOrUpdate(ArrayList<? extends Task> tasksList) throws TaskValidationException {
+    public List<Task> createOrUpdate(ArrayList<? extends Task> tasksList) throws TaskValidationException, TaskNotFound {
+
         ArrayList<Task> result = new ArrayList<>();
         for (Task task : tasksList) {
             result.add(createOrUpdate(task));
@@ -39,8 +41,9 @@ public class InMemoryTaskManager implements TaskManager {
         return result;
     }
 
+
     @Override
-    public Task createOrUpdate(Task task) throws TaskValidationException {
+    public Task createOrUpdate(Task task) throws TaskValidationException, TaskNotFound {
         Task result;
         checkDataCreateOrUpdate(task);
         if (task.getId() == null) {
@@ -59,7 +62,8 @@ public class InMemoryTaskManager implements TaskManager {
         return result;
     }
 
-    protected void checkDataCreateOrUpdate(Task task) throws TaskValidationException {
+    @Override
+    public void checkDataCreateOrUpdate(Task task) throws TaskValidationException {
         if (task == null) {
             throw new TaskValidationException("Не передан объект задачи!");
         }
@@ -98,7 +102,7 @@ public class InMemoryTaskManager implements TaskManager {
 
 
     @Override
-    public void removeTask(Integer taskId) throws IllegalArgumentException {
+    public void removeTask(Integer taskId) throws TaskNotFound {
         switch (findTaskById(taskId)) {
             case Epic e -> {
                 for (Subtask subtask : e.getSubtasks()) {
@@ -113,7 +117,7 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public void removeTaskById(Integer taskId) throws IllegalArgumentException {
+    public void removeTaskById(Integer taskId) throws TaskNotFound {
         PatchTask patchTask = getPatchTask(taskId);
         prioritizedTasks.removeTask(findTaskById(taskId));
         tasks.get(patchTask.getTaskType()).remove(patchTask.getIndex());
@@ -126,14 +130,14 @@ public class InMemoryTaskManager implements TaskManager {
         return tasksTaskTypeInd.containsKey(taskId);
     }
 
-    protected Task findTaskById(Integer taskId) throws IllegalArgumentException {
+    protected Task findTaskById(Integer taskId) throws TaskNotFound {
         PatchTask patchTask = getPatchTask(taskId);
         return tasks.get(patchTask.getTaskType()).get(patchTask.getIndex());
     }
 
-    private PatchTask getPatchTask(Integer taskId) throws IllegalArgumentException {
+    private PatchTask getPatchTask(Integer taskId) throws TaskNotFound {
         if (!isExistsTask(taskId)) {
-            throw new IllegalArgumentException("Задача по ID не найдена");
+            throw new TaskNotFound("Задача по ID не найдена");
         }
         TaskType taskType = tasksTaskTypeInd.get(taskId);
         var taskChunk = tasks.get(taskType);
@@ -144,7 +148,7 @@ public class InMemoryTaskManager implements TaskManager {
             }
             return new PatchTask(taskType, i);
         }
-        throw new IllegalArgumentException("Задача по ID не найдена");
+        throw new TaskNotFound("Задача по ID не найдена");
     }
 
     private void addHistory(Task task) {
@@ -166,7 +170,7 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public Task getTaskById(Integer taskId) throws IllegalArgumentException {
+    public Task getTaskById(Integer taskId) throws TaskNotFound {
         Task task = findTaskById(taskId);
         addHistory(task);
         return task;

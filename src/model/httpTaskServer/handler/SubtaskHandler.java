@@ -15,9 +15,9 @@ import static java.net.HttpURLConnection.HTTP_NOT_ACCEPTABLE;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
 
-public class TaskHandler extends BaseMethodHandle {
+public class SubtaskHandler extends BaseMethodHandle {
 
-    public TaskHandler(TaskManager taskManager) {
+    public SubtaskHandler(TaskManager taskManager) {
         super(taskManager);
     }
 
@@ -25,7 +25,7 @@ public class TaskHandler extends BaseMethodHandle {
     void getTask(HttpExchange exchange, String[] splitPath) throws IOException {
         Integer idTask = getId(splitPath, 2);
         if (idTask == null) {
-            sendText(exchange, gson.toJson(taskManager.getTasks(TaskType.TASK)));
+            sendText(exchange, gson.toJson(taskManager.getTasks(TaskType.SUBTASK)));
         } else {
             Task content;
             try {

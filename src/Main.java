@@ -1,5 +1,6 @@
 import model.TaskStatus;
 import model.TaskType;
+import model.exception.TaskNotFound;
 import model.exception.TaskValidationException;
 import model.manager.Managers;
 import model.manager.TaskManager;
@@ -16,11 +17,12 @@ import java.util.function.Consumer;
 
 public class Main {
 
-    public static void main(String[] args) throws TaskValidationException {
-        modeFile();
+    public static void main(String[] args){
+        var http = Managers.getDefaultHttpServer();
+        http.start();
     }
 
-    public static void modeFile() throws TaskValidationException {
+    public static void modeFile() throws TaskValidationException, TaskNotFound {
         TaskManager taskManager = Managers.getDefault();
         showHead("Исходные данные");
         showAllTask(taskManager);
@@ -32,7 +34,7 @@ public class Main {
 //        System.out.println(taskManager.getPrioritizedTasks());
     }
 
-    public static void modeInMemory() throws TaskValidationException {
+    public static void modeInMemory() throws TaskValidationException, TaskNotFound {
         TaskManager taskManager = Managers.getDefault();
         var listTask = generateTask(taskManager, 3);
         var listTaskEpic = generateEpic(taskManager, 2);
@@ -98,7 +100,7 @@ public class Main {
         }
     }
 
-    public static ArrayList<Task> generateTask(TaskManager tm, Integer count) throws TaskValidationException {
+    public static ArrayList<Task> generateTask(TaskManager tm, Integer count) throws TaskValidationException,TaskNotFound {
         ArrayList<Task> tasksList = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             tasksList.add(new Task("Наименование_%d".formatted(i + 1), "Описание_%d".formatted(i + 1), getRandomLocalDateTime(), getRandomDuration()));
@@ -106,7 +108,7 @@ public class Main {
         return (ArrayList<Task>) tm.createOrUpdate(tasksList);
     }
 
-    public static ArrayList<Task> generateEpic(TaskManager tm, Integer count) throws TaskValidationException {
+    public static ArrayList<Task> generateEpic(TaskManager tm, Integer count) throws TaskValidationException, TaskNotFound {
         ArrayList<Task> tasksList = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             tasksList.add(new Epic("Эпик Наименование_%d".formatted(i + 1), "Описание_%d".formatted(i + 1)));
@@ -114,7 +116,7 @@ public class Main {
         return (ArrayList<Task>) tm.createOrUpdate(tasksList);
     }
 
-    public static ArrayList<Task> generateSubTask(TaskManager tm, Integer count, Task epic) throws TaskValidationException {
+    public static ArrayList<Task> generateSubTask(TaskManager tm, Integer count, Task epic) throws TaskValidationException, TaskNotFound {
         ArrayList<Task> tasksList = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             tasksList.add(new Subtask("Подзадача Наименование_%d".formatted(i + 1), "Описание_%d".formatted(i + 1), (Epic) epic, getRandomLocalDateTime(), getRandomDuration()));
@@ -125,7 +127,7 @@ public class Main {
     public static void showAllTask(TaskManager tm) {
         System.out.println("Список всех задач:");
         for (var taskType : TaskType.values()) {
-            System.out.println("\t%s(%s):".formatted(taskType.getName(), taskType));
+            System.out.printf("\t%s(%s):%n", taskType.getName(), taskType);
             for (var task : tm.getTasks(taskType)) {
                 System.out.println("\t\t%s".formatted(task));
             }
@@ -135,7 +137,7 @@ public class Main {
 
     public static void showHistory(TaskManager tm) {
         for (var current : tm.getHistory()) {
-            System.out.println("\t%s(%s)->%s (%s)".formatted(current.getTypeTask().getName(), current.getTypeTask(), current.getId(), current.getName()));
+            System.out.printf("\t%s(%s)->%s (%s)%n", current.getTypeTask().getName(), current.getTypeTask(), current.getId(), current.getName());
         }
     }
 
