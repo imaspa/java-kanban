@@ -30,7 +30,6 @@ public abstract class BaseMethodHandle extends BaseHandler implements HttpHandle
         }
     }
 
-
     abstract void getTask(HttpExchange exchange, String path) throws IOException, TaskNotFound;
 
     abstract void postTask(HttpExchange exchange, String path) throws IOException;

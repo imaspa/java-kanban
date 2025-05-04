@@ -16,7 +16,6 @@ import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.net.HttpURLConnection.HTTP_NOT_ACCEPTABLE;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
-
 public class EpicHandler extends BaseMethodHandle {
     private static final Pattern ALL_PATTERN = Pattern.compile("^/epics$");
     private static final Pattern BY_ID_PATTERN = Pattern.compile("^/epics/\\d+$");

@@ -10,7 +10,6 @@ import model.manager.HttpServ;
 import model.manager.TaskManager;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.InetSocketAddress;
 
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;

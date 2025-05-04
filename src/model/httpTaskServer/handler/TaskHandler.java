@@ -65,7 +65,7 @@ public class TaskHandler extends BaseMethodHandle {
             return;
         }
         //sendResponse(exchange, HTTP_CREATED);
-        sendText(exchange, gson.toJson(createdTask),HTTP_CREATED);
+        sendText(exchange, gson.toJson(createdTask), HTTP_CREATED);
     }
 
     @Override
