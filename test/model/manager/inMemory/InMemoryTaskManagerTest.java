@@ -146,11 +146,11 @@ class InMemoryTaskManagerTest {
                 () -> taskManager.createOrUpdate(createTask(taskType)),
                 "Не ожидалось исключения"
         );
-        
+
         assertDoesNotThrow(
                 () -> taskManager.getTaskById(task.getId()),
                 "Не ожидалось исключения"
-        );        
+        );
 
         List<Task> history = taskManager.getHistory();
         assertNotNull(history, "История не должна быть пустой (null)");
@@ -171,7 +171,7 @@ class InMemoryTaskManagerTest {
                 "Не ожидалось исключения"
         );
 
-        
+
         final Task savedTask = assertDoesNotThrow(
                 () -> taskManager.getTaskById(task.getId()),
                 "Не ожидалось исключения"
@@ -187,11 +187,11 @@ class InMemoryTaskManagerTest {
                 () -> taskManager.createOrUpdate(createTask(taskType)),
                 "Не ожидалось исключения"
         );
-        
-                assertDoesNotThrow(
+
+        assertDoesNotThrow(
                 () -> taskManager.removeTaskById(task.getId()),
                 "Не ожидалось исключения"
-        );        
+        );
         assertTrue(taskManager.getTasks(taskType).isEmpty(), "Список задач должен быть пустым");
     }
 
@@ -210,15 +210,15 @@ class InMemoryTaskManagerTest {
                 "Не ожидалось исключения"
         );
 
-        assertEquals(task,  assertDoesNotThrow(
+        assertEquals(task, assertDoesNotThrow(
                 () -> taskManager.getTaskById(task.getId()),
                 "Не ожидалось исключения"
-        ));       
-        assertEquals(epic,  assertDoesNotThrow(
+        ));
+        assertEquals(epic, assertDoesNotThrow(
                 () -> taskManager.getTaskById(epic.getId()),
                 "Не ожидалось исключения"
-        ));        
-        assertEquals(subtask,  assertDoesNotThrow(
+        ));
+        assertEquals(subtask, assertDoesNotThrow(
                 () -> taskManager.getTaskById(subtask.getId()),
                 "Не ожидалось исключения"
         ));

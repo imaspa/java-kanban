@@ -65,10 +65,10 @@ public class BaseHandler {
     }
 
     protected void sendText(final HttpExchange exchange, final String text) throws IOException {
-        sendText(exchange,text,HTTP_OK);
+        sendText(exchange, text, HTTP_OK);
     }
 
-    protected void sendText(final HttpExchange exchange, final String text,int statusCode) throws IOException {
+    protected void sendText(final HttpExchange exchange, final String text, int statusCode) throws IOException {
         exchange.getResponseHeaders().add("Content-Type", "application/json;charset=utf-8");
         sendResponse(exchange, statusCode, text);
     }

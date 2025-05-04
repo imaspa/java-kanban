@@ -3,8 +3,6 @@ package model.manager;
 import model.TaskType;
 import model.exception.TaskNotFound;
 import model.exception.TaskValidationException;
-import model.task.Epic;
-import model.task.Subtask;
 import model.task.Task;
 
 import java.util.ArrayList;

@@ -17,7 +17,7 @@ import java.util.function.Consumer;
 
 public class Main {
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
         var http = Managers.getDefaultHttpServer();
         http.start();
     }
@@ -100,7 +100,7 @@ public class Main {
         }
     }
 
-    public static ArrayList<Task> generateTask(TaskManager tm, Integer count) throws TaskValidationException,TaskNotFound {
+    public static ArrayList<Task> generateTask(TaskManager tm, Integer count) throws TaskValidationException, TaskNotFound {
         ArrayList<Task> tasksList = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             tasksList.add(new Task("Наименование_%d".formatted(i + 1), "Описание_%d".formatted(i + 1), getRandomLocalDateTime(), getRandomDuration()));

@@ -85,8 +85,8 @@ public class FileBackedTaskManagerWithDataTest {
         final Task savedTask = assertDoesNotThrow(
                 () -> taskManager.getTaskById(taskId),
                 "Не ожидалось исключения"
-        );        
-        
+        );
+
         assertNotNull(savedTask, "Задача не найдена.");
         assertEquals(task, savedTask, "Задачи не совпадают.");
 

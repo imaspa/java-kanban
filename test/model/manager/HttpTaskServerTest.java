@@ -38,7 +38,7 @@ class HttpTaskServerTest {
     private HttpServ HttpTaskServer;
 
     @BeforeEach
-    void setUp(){
+    void setUp() {
         taskManager = Managers.getMemory();
         HttpTaskServer = getHttpTaskServer(taskManager);
         gson = new GsonBuilder()
