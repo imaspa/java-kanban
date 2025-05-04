@@ -1,5 +1,7 @@
 package model.httpTaskServer.handler;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -27,6 +29,23 @@ import java.time.format.DateTimeFormatter;
 public final class GsonAdapters {
 
     private GsonAdapters() {
+    }
+
+    public static Gson createGson() {
+        return new GsonBuilder()
+                .registerTypeAdapter(Duration.class, new DurationTypeAdapter())
+                .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
+                .registerTypeAdapter(Subtask.class, new SubtaskAdapter())
+                .registerTypeAdapter(Epic.class, new EpicAdapter())
+                .serializeNulls()
+                .setPrettyPrinting()
+                .create();
+    }
+
+    private static final Gson GSON_INSTANCE = createGson();
+
+    public static Gson getGson() {
+        return GSON_INSTANCE;
     }
 
     public static class DurationTypeAdapter implements JsonSerializer<Duration>, JsonDeserializer<Duration> {
@@ -79,8 +98,7 @@ public final class GsonAdapters {
             jsonObject.addProperty("taskStatus", src.getTaskStatus().toString());
             jsonObject.add("startTime", context.serialize(src.getStartTime()));
             jsonObject.add("duration", context.serialize(src.getDuration()));
-
-            // Сериализация ссылки на Epic (только ID, чтобы избежать циклических зависимостей)
+            // id, чтобы избежать циклических зависимостей
             jsonObject.addProperty("epicId", src.getEpic() != null ? src.getEpic().getId() : null);
 
             return jsonObject;

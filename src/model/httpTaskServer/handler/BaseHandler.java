@@ -1,7 +1,6 @@
 package model.httpTaskServer.handler;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
 import com.sun.net.httpserver.HttpExchange;
 import model.manager.TaskManager;
@@ -14,24 +13,15 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.time.LocalDateTime;
 
 import static java.net.HttpURLConnection.HTTP_OK;
 
 public class BaseHandler {
-    public final Gson gson;
+    protected final Gson gson;
     final TaskManager taskManager;
 
     public BaseHandler(TaskManager taskManager) {
-        gson = new GsonBuilder()
-                .registerTypeAdapter(Duration.class, new GsonAdapters.DurationTypeAdapter())
-                .registerTypeAdapter(LocalDateTime.class, new GsonAdapters.LocalDateTimeAdapter())
-                .registerTypeAdapter(Subtask.class, new GsonAdapters.SubtaskAdapter())
-                .registerTypeAdapter(Epic.class, new GsonAdapters.EpicAdapter())
-                .serializeNulls()
-                .setPrettyPrinting()
-                .create();
+        this.gson = GsonAdapters.getGson();
         this.taskManager = taskManager;
     }
 

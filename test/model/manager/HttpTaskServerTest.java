@@ -1,10 +1,10 @@
 package model.manager;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import model.TaskType;
 import model.httpTaskServer.handler.GsonAdapters;
+import model.manager.helper.HttpTestClient;
 import model.task.Epic;
 import model.task.Subtask;
 import model.task.Task;
@@ -14,9 +14,6 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -33,52 +30,35 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class HttpTaskServerTest {
 
-    private Gson gson;
     private TaskManager taskManager;
-    private HttpServ HttpTaskServer;
+    private HttpServ httpTaskServer;
+    private final Gson gson = GsonAdapters.getGson();
+    private HttpTestClient httpClient;
 
     @BeforeEach
     void setUp() {
         taskManager = Managers.getMemory();
-        HttpTaskServer = getHttpTaskServer(taskManager);
-        gson = new GsonBuilder()
-                .registerTypeAdapter(Duration.class, new GsonAdapters.DurationTypeAdapter())
-                .registerTypeAdapter(LocalDateTime.class, new GsonAdapters.LocalDateTimeAdapter())
-                .registerTypeAdapter(Subtask.class, new GsonAdapters.SubtaskAdapter())
-                .registerTypeAdapter(Epic.class, new GsonAdapters.EpicAdapter())
-                .serializeNulls()
-                .setPrettyPrinting()
-                .create();
-        HttpTaskServer.start();
+        httpTaskServer = getHttpTaskServer(taskManager);
+        httpTaskServer.start();
+        httpClient = new HttpTestClient();
     }
 
     @AfterEach
     void serverStop() {
-        HttpTaskServer.stop();
+        httpTaskServer.stop();
     }
 
     @Test
     void getTasks() throws IOException, InterruptedException {
         TaskType taskType = TaskType.TASK;
-        final Task task = assertDoesNotThrow(
-                () -> taskManager.createOrUpdate(createTask(taskType)),
-                "Не ожидалось исключения"
-        );
+        final Task task = assertDoesNotThrow(() -> taskManager.createOrUpdate(createTask(taskType)));
 
-        HttpResponse<String> response;
-        try (HttpClient client = HttpClient.newHttpClient()) {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("http://localhost:8080/tasks/" + task.getId()))
-                    .GET()
-                    .build();
+        HttpResponse<String> response = httpClient.get("/tasks/" + task.getId());
+        Task taskResponse = gson.fromJson(response.body(), Task.class);
 
-            response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            Task taskResponse = gson.fromJson(response.body(), Task.class);
-
-            assertEquals(HTTP_OK, response.statusCode(), "Неверный статус ответа");
-            assertNotNull(response.body(), "Body не получено");
-            assertEquals(task.getName(), taskResponse.getName(), "Имя задачи отличается");
-        }
+        assertEquals(HTTP_OK, response.statusCode());
+        assertNotNull(response.body());
+        assertEquals(task.getName(), taskResponse.getName());
     }
 
     @Test
@@ -86,123 +66,68 @@ class HttpTaskServerTest {
         TaskType taskType = TaskType.TASK;
         String taskJson = gson.toJson(createTask(taskType));
 
-        try (HttpClient client = HttpClient.newHttpClient()) {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("http://localhost:8080/tasks"))
-                    .POST(HttpRequest.BodyPublishers.ofString(taskJson))
-                    .build();
+        HttpResponse<String> createResponse = httpClient.post("/tasks", taskJson);
+        assertEquals(HttpURLConnection.HTTP_CREATED, createResponse.statusCode());
 
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            assertEquals(HttpURLConnection.HTTP_CREATED, response.statusCode(), "Неверный статус ответа");
+        Task taskResponse = gson.fromJson(createResponse.body(), Task.class);
+        HttpResponse<String> getResponse = httpClient.get("/tasks/" + taskResponse.getId());
 
-            Task taskResponse = gson.fromJson(response.body(), Task.class);
-
-            request = HttpRequest.newBuilder()
-                    .uri(URI.create("http://localhost:8080/tasks/" + taskResponse.getId()))
-                    .GET()
-                    .build();
-
-            response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            assertEquals(HTTP_OK, response.statusCode(), "Неверный статус ответа");
-
-            Task taskResponse1 = gson.fromJson(response.body(), Task.class);
-            assertEquals(taskResponse.getName(), taskResponse1.getName(), "Некорректное имя");
-        }
+        assertEquals(HTTP_OK, getResponse.statusCode());
+        Task retrievedTask = gson.fromJson(getResponse.body(), Task.class);
+        assertEquals(taskResponse.getName(), retrievedTask.getName());
     }
 
     @Test
     void deleteTask() throws IOException, InterruptedException {
         TaskType taskType = TaskType.TASK;
-        final Task task = assertDoesNotThrow(
-                () -> taskManager.createOrUpdate(createTask(taskType)),
-                "Не ожидалось исключения"
-        );
+        final Task task = assertDoesNotThrow(() -> taskManager.createOrUpdate(createTask(taskType)));
 
-        HttpResponse<String> response;
-        try (HttpClient client = HttpClient.newHttpClient()) {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("http://localhost:8080/tasks/" + task.getId()))
-                    .DELETE()
-                    .build();
+        HttpResponse<String> deleteResponse = httpClient.delete("/tasks/" + task.getId());
+        assertEquals(HTTP_OK, deleteResponse.statusCode());
+        assertNotNull(deleteResponse.body());
 
-            response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            assertEquals(HTTP_OK, response.statusCode(), "Неверный статус ответа");
-            assertNotNull(response.body(), "Body не получено");
-
-            final List<Task> tasks = taskManager.getTasks(taskType);
-            assertNotNull(tasks, "Задачи не возвращаются.");
-            assertEquals(0, tasks.size(), "Неверное количество задач.");
-        }
+        final List<Task> tasks = taskManager.getTasks(taskType);
+        assertNotNull(tasks);
+        assertEquals(0, tasks.size());
     }
 
     @Test
     void getSubtasksList() throws IOException, InterruptedException {
-        final Task epicTask = assertDoesNotThrow(
-                () -> taskManager.createOrUpdate(createTask(TaskType.EPIC)),
-                "Не ожидалось исключения"
-        );
+        final Task epicTask = assertDoesNotThrow(() -> taskManager.createOrUpdate(createTask(TaskType.EPIC)));
 
         TaskType taskType = TaskType.SUBTASK;
-        final Task task = assertDoesNotThrow(
-                () -> taskManager.createOrUpdate(createTask(taskType, null, (Epic) epicTask)),
-                "Не ожидалось исключения"
-        );
-        final Task task1 = assertDoesNotThrow(
-                () -> taskManager.createOrUpdate(createTask(taskType, null, (Epic) epicTask)),
-                "Не ожидалось исключения"
-        );
+        assertDoesNotThrow(() -> {
+            taskManager.createOrUpdate(createTask(taskType, null, (Epic) epicTask));
+            taskManager.createOrUpdate(createTask(taskType, null, (Epic) epicTask));
+        });
 
-        HttpResponse<String> response;
-        try (HttpClient client = HttpClient.newHttpClient()) {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("http://localhost:8080/epics/%d/subtasks".formatted(epicTask.getId())))
-                    .GET()
-                    .build();
+        HttpResponse<String> response = httpClient.get("/epics/%d/subtasks".formatted(epicTask.getId()));
+        assertEquals(HTTP_OK, response.statusCode());
+        assertNotNull(response.body());
 
-            response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            assertEquals(HTTP_OK, response.statusCode(), "Неверный статус ответа");
-            assertNotNull(response.body(), "Body не получено");
-
-            List<Subtask> subtasksList = gson.fromJson(response.body(), new TypeToken<List<Subtask>>() {
-            }.getType());
-            assertEquals(2, subtasksList.size(), "Неверное количество задач.");
-        }
+        List<Subtask> subtasksList = gson.fromJson(response.body(), new TypeToken<List<Subtask>>() {
+        }.getType());
+        assertEquals(2, subtasksList.size());
     }
 
     @Test
     void historyManagerTest() throws IOException, InterruptedException {
         TaskType taskType = TaskType.TASK;
-        final Task task = assertDoesNotThrow(
-                () -> taskManager.createOrUpdate(createTask(taskType)),
-                "Не ожидалось исключения"
-        );
-        final Task task1 = assertDoesNotThrow(
-                () -> taskManager.createOrUpdate(createTask(taskType)),
-                "Не ожидалось исключения"
-        );
-        assertDoesNotThrow(
-                () -> taskManager.getTaskById(task.getId()),
-                "Не ожидалось исключения"
-        );
-        assertDoesNotThrow(
-                () -> taskManager.getTaskById(task1.getId()),
-                "Не ожидалось исключения"
-        );
+        final Task task = assertDoesNotThrow(() -> taskManager.createOrUpdate(createTask(taskType)));
+        final Task task1 = assertDoesNotThrow(() -> taskManager.createOrUpdate(createTask(taskType)));
 
-        HttpResponse<String> response;
-        try (HttpClient client = HttpClient.newHttpClient()) {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("http://localhost:8080/history"))
-                    .GET()
-                    .build();
-            response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            assertEquals(HTTP_OK, response.statusCode(), "Неверный статус ответа");
-            assertNotNull(response.body(), "Body не получено");
+        assertDoesNotThrow(() -> {
+            taskManager.getTaskById(task.getId());
+            taskManager.getTaskById(task1.getId());
+        });
 
-            List<Task> tasks = gson.fromJson(response.body(), new TypeToken<List<Task>>() {
-            }.getType());
-            assertEquals(2, tasks.size(), "Количество задач не сходится");
-        }
+        HttpResponse<String> response = httpClient.get("/history");
+        assertEquals(HTTP_OK, response.statusCode());
+        assertNotNull(response.body());
+
+        List<Task> tasks = gson.fromJson(response.body(), new TypeToken<List<Task>>() {
+        }.getType());
+        assertEquals(2, tasks.size());
     }
 
     @Test
@@ -210,38 +135,26 @@ class HttpTaskServerTest {
         LocalDateTime currentTime = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS);
         var prioritizedTasks = taskManager.getPrioritizedTasks();
 
-        Task task1 = assertDoesNotThrow(
-                () -> {
-                    Task task1_ = createTask(TaskType.TASK);
-                    task1_.setStartTime(currentTime);
-                    task1_.setDuration(Duration.ofMinutes(50));
-                    return taskManager.createOrUpdate(task1_);
-                },
-                "Не ожидалось исключения"
-        );
+        Task task1 = assertDoesNotThrow(() -> {
+            Task task = createTask(TaskType.TASK);
+            task.setStartTime(currentTime);
+            task.setDuration(Duration.ofMinutes(50));
+            return taskManager.createOrUpdate(task);
+        });
 
-        Task task2 = assertDoesNotThrow(
-                () -> {
-                    Task task2_ = createTask(TaskType.TASK);
-                    task2_.setStartTime(currentTime.plusMinutes(60));
-                    task2_.setDuration(Duration.ofMinutes(50));
-                    return taskManager.createOrUpdate(task2_);
-                },
-                "Не ожидалось исключения"
-        );
+        Task task2 = assertDoesNotThrow(() -> {
+            Task task = createTask(TaskType.TASK);
+            task.setStartTime(currentTime.plusMinutes(60));
+            task.setDuration(Duration.ofMinutes(50));
+            return taskManager.createOrUpdate(task);
+        });
 
-        HttpResponse<String> response;
-        try (HttpClient client = HttpClient.newHttpClient()) {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("http://localhost:8080/prioritized"))
-                    .GET()
-                    .build();
-            response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            assertEquals(HTTP_OK, response.statusCode(), "Неверный статус ответа");
-            assertNotNull(response.body(), "Body не получено");
-            Set<Task> tasks = gson.fromJson(response.body(), new TypeToken<Set<Task>>() {
-            }.getType());
-            assertEquals(prioritizedTasks, tasks, "Списки не сходятся.");
-        }
+        HttpResponse<String> response = httpClient.get("/prioritized");
+        assertEquals(HTTP_OK, response.statusCode());
+        assertNotNull(response.body());
+
+        Set<Task> tasks = gson.fromJson(response.body(), new TypeToken<Set<Task>>() {
+        }.getType());
+        assertEquals(prioritizedTasks, tasks);
     }
 }
