@@ -2,6 +2,7 @@ package model.task;
 
 import model.TaskStatus;
 import model.TaskType;
+import model.exception.TaskValidationException;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -14,6 +15,10 @@ import java.util.stream.Collectors;
 public class Epic extends Task {
     private List<Subtask> subtasks = new ArrayList<>();
     private LocalDateTime endTime;
+
+    public Epic(Integer id) {
+        super(id);
+    }
 
     public Epic(Integer id, Task task) {
         super(id, task);
@@ -106,13 +111,13 @@ public class Epic extends Task {
     }
 
     @Override
-    public Task update(Task task) throws IllegalArgumentException {
+    public Task update(Task task) throws TaskValidationException {
         super.update(task);
         this.subtasks = ((Epic) task).getSubtasks();
         return this;
     }
 
-    public void rebuildSubtask(Subtask subtask) {
+    public void rebuildSubtask(Subtask subtask) throws TaskValidationException {
         Subtask targetSubtask = findSubtask(subtask);
         if (targetSubtask != null) {
             targetSubtask.update(subtask);

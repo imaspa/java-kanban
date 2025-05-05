@@ -2,6 +2,7 @@ package model.task;
 
 import model.TaskStatus;
 import model.TaskType;
+import model.exception.TaskValidationException;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -59,7 +60,7 @@ public class Subtask extends Task {
     }
 
     @Override
-    public Task update(Task task) throws IllegalArgumentException {
+    public Task update(Task task) throws TaskValidationException {
         super.update(task);
         this.epic = ((Subtask) task).getEpic();
         return this;

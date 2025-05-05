@@ -55,11 +55,14 @@ public class FileBackedTaskManagerWithDataTest {
         TaskType taskType = TaskType.TASK;
         final Task task = assertDoesNotThrow(
                 () -> taskManager.createOrUpdate(createTask(taskType)),
-                "Не ожидалось исключения при создании/изменении задачи"
+                "Не ожидалось исключения"
         );
 
         final int taskId = task.getId();
-        final Task savedTask = taskManager.getTaskById(taskId);
+        final Task savedTask = assertDoesNotThrow(
+                () -> taskManager.getTaskById(taskId),
+                "Не ожидалось исключения"
+        );
 
         assertNotNull(savedTask, "Задача не найдена.");
         assertEquals(task, savedTask, "Задачи не совпадают.");
@@ -76,10 +79,13 @@ public class FileBackedTaskManagerWithDataTest {
         TaskType taskType = TaskType.EPIC;
         final Task task = assertDoesNotThrow(
                 () -> taskManager.createOrUpdate(createTask(taskType)),
-                "Не ожидалось исключения при создании/изменении задачи"
+                "Не ожидалось исключения"
         );
         final int taskId = task.getId();
-        final Task savedTask = taskManager.getTaskById(taskId);
+        final Task savedTask = assertDoesNotThrow(
+                () -> taskManager.getTaskById(taskId),
+                "Не ожидалось исключения"
+        );
 
         assertNotNull(savedTask, "Задача не найдена.");
         assertEquals(task, savedTask, "Задачи не совпадают.");
@@ -95,16 +101,19 @@ public class FileBackedTaskManagerWithDataTest {
     void addNewSubtaskTask() {
         final Task epicTask = assertDoesNotThrow(
                 () -> taskManager.createOrUpdate(createTask(TaskType.EPIC)),
-                "Не ожидалось исключения при создании/изменении задачи"
+                "Не ожидалось исключения"
         );
 
         TaskType taskType = TaskType.SUBTASK;
         final Task task = assertDoesNotThrow(
                 () -> taskManager.createOrUpdate(createTask(taskType, null, (Epic) epicTask)),
-                "Не ожидалось исключения при создании/изменении задачи"
+                "Не ожидалось исключения"
         );
         final int taskId = task.getId();
-        final Task savedTask = taskManager.getTaskById(taskId);
+        final Task savedTask = assertDoesNotThrow(
+                () -> taskManager.getTaskById(taskId),
+                "Не ожидалось исключения"
+        );
 
         assertNotNull(savedTask, "Задача не найдена.");
         assertEquals(task, savedTask, "Задачи не совпадают.");
